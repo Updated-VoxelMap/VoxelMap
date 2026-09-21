@@ -38,11 +38,11 @@ public class RenderUtils {
     }
 
     private static int getSafeScreenWidth() {
-        return Math.max(1, Minecraft.getInstance().getWindow().getScreenWidth());
+        return Math.max(1, Minecraft.getInstance().getWindow().getWidth());
     }
 
     private static int getSafeScreenHeight() {
-        return Math.max(1, Minecraft.getInstance().getWindow().getScreenHeight());
+        return Math.max(1, Minecraft.getInstance().getWindow().getHeight());
     }
 
     public static float getGuiWidth() {

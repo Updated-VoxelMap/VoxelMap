@@ -34,23 +34,39 @@ public class RenderUtils {
     private static final ArrayDeque<ProjectionEntry> PROJECTION_STACK = new ArrayDeque<>();
 
     public static void init() {
-        FULLSCREEN_TARGET.createBuffers(getSafeScreenWidth(), getSafeScreenHeight());
+        FULLSCREEN_TARGET.createBuffers(getFramebufferWidth(), getFramebufferHeight());
     }
 
-    private static int getSafeScreenWidth() {
+    public static int getFramebufferWidth() {
         return Math.max(1, Minecraft.getInstance().getWindow().getWidth());
     }
 
-    private static int getSafeScreenHeight() {
+    public static int getFramebufferHeight() {
         return Math.max(1, Minecraft.getInstance().getWindow().getHeight());
     }
 
+    public static int getScreenWidth() {
+        return Math.max(1, Minecraft.getInstance().getWindow().getScreenWidth());
+    }
+
+    public static int getScreenHeight() {
+        return Math.max(1, Minecraft.getInstance().getWindow().getScreenHeight());
+    }
+
     public static float getGuiWidth() {
-        return (float) getSafeScreenWidth() / Minecraft.getInstance().getWindow().getGuiScale();
+        return (float) getFramebufferWidth() / Minecraft.getInstance().getWindow().getGuiScale();
     }
 
     public static float getGuiHeight() {
-        return (float) getSafeScreenHeight() / Minecraft.getInstance().getWindow().getGuiScale();
+        return (float) getFramebufferHeight() / Minecraft.getInstance().getWindow().getGuiScale();
+    }
+
+    public static float getRetinaScaleX() {
+        return (float) getFramebufferWidth() / getScreenWidth();
+    }
+
+    public static float getRetinaScaleY() {
+        return (float) getFramebufferHeight() / getScreenHeight();
     }
 
     public static Matrix4fStack getMatrixStack() {
@@ -105,8 +121,8 @@ public class RenderUtils {
     }
 
     public static VoxelMapRenderTarget getFullscreenTarget() {
-        int width = getSafeScreenWidth();
-        int height = getSafeScreenHeight();
+        int width = getFramebufferWidth();
+        int height = getFramebufferHeight();
         if (FULLSCREEN_TARGET.width != width || FULLSCREEN_TARGET.height != height) {
             FULLSCREEN_TARGET.resize(width, height);
         }

@@ -310,8 +310,8 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double amount) {
         this.timeOfLastMouseInput = System.currentTimeMillis();
         this.switchToMouseInput();
-        float mouseDirectX = (float) minecraft.mouseHandler.xpos();
-        float mouseDirectY = (float) minecraft.mouseHandler.ypos();
+        float mouseDirectX = (float) getRawMouseX();
+        float mouseDirectY = (float) getRawMouseY();
         if (amount != 0.0) {
             if (amount > 0.0) {
                 this.zoomGoal *= 1.26F;
@@ -336,8 +336,8 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
         selectedWaypoint = getHoveredWaypoint();
         if (mouseButtonEvent.button() == InputConstants.MOUSE_BUTTON_RIGHT && (selectedWaypoint != null || (mouseY > this.top && mouseY < this.bottom))) {
             this.timeOfLastKBInput = 0L;
-            int mouseDirectX = (int) minecraft.mouseHandler.xpos();
-            int mouseDirectY = (int) minecraft.mouseHandler.ypos();
+            int mouseDirectX = (int) getRawMouseX();
+            int mouseDirectY = (int) getRawMouseY();
             if (mapOptions.worldmapAllowed) {
                 this.createPopup((int) mouseButtonEvent.x(), (int) mouseButtonEvent.y(), mouseDirectX, mouseDirectY);
             }
@@ -467,6 +467,14 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
         }
     }
 
+    private double getRawMouseX() {
+        return minecraft.mouseHandler.xpos() * RenderUtils.getRetinaScaleX();
+    }
+
+    private double getRawMouseY() {
+        return minecraft.mouseHandler.ypos() * RenderUtils.getRetinaScaleY();
+    }
+
     private void switchToMouseInput() {
         this.timeOfLastKBInput = 0L;
         if (!this.mouseCursorShown) {
@@ -494,8 +502,8 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
 
         this.mouseX = mouseX;
         this.mouseY = mouseY;
-        float mouseDirectX = (float) minecraft.mouseHandler.xpos();
-        float mouseDirectY = (float) minecraft.mouseHandler.ypos();
+        float mouseDirectX = (float) getRawMouseX();
+        float mouseDirectY = (float) getRawMouseY();
         if (this.zoom != this.zoomGoal) {
             float previousZoom = this.zoom;
             long timeSinceZoom = System.currentTimeMillis() - this.timeOfZoom;

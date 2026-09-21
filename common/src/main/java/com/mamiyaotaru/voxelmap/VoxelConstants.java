@@ -57,10 +57,6 @@ public final class VoxelConstants {
         return MultiLoaderManager.getModApiBridge().isModEnabled("optifine") || MultiLoaderManager.getModApiBridge().isModEnabled("continuity");
     }
 
-    public static boolean hasVulkanMod() {
-        return MultiLoaderManager.getModApiBridge().isModEnabled("vulkanmod");
-    }
-
     @NotNull
     public static Logger getLogger() { return LOGGER; }
 

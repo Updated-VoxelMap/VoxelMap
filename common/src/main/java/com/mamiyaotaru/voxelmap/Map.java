@@ -8,7 +8,6 @@ import com.mamiyaotaru.voxelmap.interfaces.IChangeObserver;
 import com.mamiyaotaru.voxelmap.interfaces.IReloadListener;
 import com.mamiyaotaru.voxelmap.persistent.GuiPersistentMap;
 import com.mamiyaotaru.voxelmap.rendering.CachedProjectionMatrixBuffer;
-import com.mamiyaotaru.voxelmap.rendering.IrisCompat;
 import com.mamiyaotaru.voxelmap.rendering.RenderUtils;
 import com.mamiyaotaru.voxelmap.rendering.SubmitPass;
 import com.mamiyaotaru.voxelmap.rendering.VoxelMapRenderTarget;
@@ -663,33 +662,27 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
         );
 
         VoxelMapRenderTarget fullscreenTarget = RenderUtils.getFullscreenTarget();
-        Matrix4fStack matrixStack = RenderUtils.getMatrixStack();
+        boolean lastShaderRendering = RenderUtils.setShaderRendering(false);
         RenderUtils.setupProjectionMatrix(hudProjection.getBuffer(RenderUtils.getGuiWidth(), RenderUtils.getGuiHeight()), ProjectionType.ORTHOGRAPHIC, -2000.0F);
-
-        boolean previousIrisRenderingLevel = IrisCompat.pushForceNotRenderingLevel();
-        try {
-            try (SubmitPass pass = RenderUtils.createSubmitPass("VoxelMap HUD", fullscreenTarget, new Vector4f(0.0F, 0.0F, 0.0F, 0.0F), 0.0)) {
-                matrixStack.pushMatrix();
-                try {
-                    matrixStack.identity();
-                    if (!this.options.hide) {
-                        if (this.fullscreenMap) {
-                            this.renderMapFull(pass, matrixStack, scWidth, scHeight, scaleProj);
-                            this.drawArrow(pass, matrixStack, scWidth / 2, scHeight / 2, scaleProj);
-                        } else {
-                            this.renderMap(pass, matrixStack, mapX, mapY, scScale, scaleProj);
-                            this.drawArrow(pass, matrixStack, mapX, mapY, scaleProj);
-                            this.drawDirections(pass, matrixStack, mapX, mapY, scaleProj);
-                        }
-                    }
-                    this.showCoords(pass, matrixStack, mapX, mapY, scaleProj);
-                } finally {
-                    matrixStack.popMatrix();
+        Matrix4fStack matrixStack = RenderUtils.getMatrixStack();
+        matrixStack.pushMatrix();
+        matrixStack.identity();
+        try (SubmitPass pass = RenderUtils.createSubmitPass("VoxelMap HUD", fullscreenTarget, new Vector4f(0.0F, 0.0F, 0.0F, 0.0F), 0.0)) {
+            if (!this.options.hide) {
+                if (this.fullscreenMap) {
+                    this.renderMapFull(pass, matrixStack, scWidth, scHeight, scaleProj);
+                    this.drawArrow(pass, matrixStack, scWidth / 2, scHeight / 2, scaleProj);
+                } else {
+                    this.renderMap(pass, matrixStack, mapX, mapY, scScale, scaleProj);
+                    this.drawArrow(pass, matrixStack, mapX, mapY, scaleProj);
+                    this.drawDirections(pass, matrixStack, mapX, mapY, scaleProj);
                 }
             }
+            this.showCoords(pass, matrixStack, mapX, mapY, scaleProj);
         } finally {
+            matrixStack.popMatrix();
             RenderUtils.restoreProjectionMatrix();
-            IrisCompat.popForceNotRenderingLevel(previousIrisRenderingLevel);
+            RenderUtils.setShaderRendering(lastShaderRendering);
         }
 
         RenderUtils.blitToScreen(graphics, fullscreenTarget.getColorTextureView(), 0.0F, 0.0F, RenderUtils.getGuiWidth(), RenderUtils.getGuiHeight(), 0xFFFFFFFF);

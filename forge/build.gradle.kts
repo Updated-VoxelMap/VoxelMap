@@ -6,6 +6,8 @@ plugins {
 
 val minecraftVersion: String by rootProject.extra
 val forgeVersion: String by rootProject.extra
+val voxelConfigVersion: String by rootProject.extra
+val geckolibVersion: String by rootProject.extra
 
 val fullVersion: String by rootProject.extra
 
@@ -33,6 +35,9 @@ dependencies {
     implementation(minecraft.dependency("net.minecraftforge:forge:${minecraftVersion}-${forgeVersion}"))
     compileOnly(project.project(":common").sourceSets.main.get().output)
     compileOnly(project.project(":server-common").sourceSets.main.get().output)
+
+    implementation("de.voxelmap:voxelconfig:${voxelConfigVersion}")
+    compileOnly("com.geckolib:geckolib-common-${minecraftVersion}:${geckolibVersion}")
 }
 
 minecraft {
@@ -68,7 +73,7 @@ minecraft {
 }
 
 tasks {
-    withType<JavaCompile> {
+    named<JavaCompile>("compileJava") {
         val commonMain = project(":common").sourceSets.main.get()
         val serverCommonMain = project(":server-common").sourceSets.main.get()
         source(commonMain.java.srcDirs)
@@ -100,6 +105,10 @@ tasks {
     }
 
     jar.get().destinationDirectory = rootDir.resolve("build").resolve("libs")
+
+    compileTestJava {
+        enabled = false
+    }
 
     test {
         enabled = false

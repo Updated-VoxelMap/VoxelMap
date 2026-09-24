@@ -1,20 +1,20 @@
 plugins {
     id("java")
-    id("net.fabricmc.fabric-loom") version ("1.17-SNAPSHOT") apply (false)
-    id("net.minecraftforge.gradle") version ("7.0.17") apply (false)
+    id("net.fabricmc.fabric-loom") version ("1.18-SNAPSHOT") apply (false)
+    id("net.minecraftforge.gradle") version ("7.0.40") apply (false)
     id("net.neoforged.moddev") version ("2.0.147") apply (false)
 }
 
 val minecraftVersion by extra { "26.3" }
-val forgeVersion by extra { "65.0.0" }
-val neoForgeVersion by extra { "26.3.0.0-beta" }
+val forgeVersion by extra { "66.0.3" }
+val neoForgeVersion by extra { "26.3.0.16-beta" }
 val fabricVersion by extra { "0.19.5" }
-val fabricApiVersion by extra { "0.160.5+26.3" }
-val modMenuVersion by extra { "20.0.1" }
-val paperApiVersion by extra { "[26.2.build,)" }
-val voxelMapVersion by extra { "1.16.12" }
+val fabricApiVersion by extra { "0.161.0+26.3" }
+val modMenuVersion by extra { "21.0.0" }
+val paperApiVersion by extra { "[26.3.build,)" }
 val voxelConfigVersion by extra { "1.0.2" }
-val geckolibVersion by extra { "5.5.6" }
+val geckolibVersion by extra { "5.5.7" }
+val voxelMapVersion by extra { "1.16.12" }
 
 val fullVersion by extra { "${minecraftVersion}-${voxelMapVersion}" }
 
@@ -44,6 +44,10 @@ subprojects {
         maven {
             name = "Geckolib Maven"
             url = uri("https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/")
+        }
+        maven {
+            name = "Brokkonaut"
+            url = uri("https://www.iani.de/nexus/content/groups/public/")
         }
         maven { url = uri("https://api.modrinth.com/maven") }
     }

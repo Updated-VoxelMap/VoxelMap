@@ -1,6 +1,7 @@
 plugins {
     id("idea")
     id("net.minecraftforge.gradle")
+    id("com.gradleup.shadow")
     id("java-library")
 }
 
@@ -103,20 +104,30 @@ tasks {
     }
 
     jar {
+        archiveClassifier.set("slim")
+    }
+
+    // Forge loads every mod as a JPMS module, and two modules may not contain
+    // the same package. Other mods bundle VoxelConfig too, so our copy is
+    // relocated into our own package.
+    shadowJar {
+        archiveClassifier.set("")
+        destinationDirectory = rootDir.resolve("build").resolve("libs")
+        configurations.set(listOf(shade))
+        relocate("de.voxelmap.voxelconfig", "com.mamiyaotaru.voxelmap.shadow.voxelconfig")
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
         manifest {
             attributes["MixinConfigs"] = "mixin.voxelmap.json,mixin.voxelmap.forge.json"
         }
 
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-        from(shade.map { if (it.isDirectory) it else zipTree(it) }) {
-            exclude("META-INF/MANIFEST.MF", "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
-        }
-
         from(rootDir.resolve("LICENSE.md"))
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
     }
 
-    jar.get().destinationDirectory = rootDir.resolve("build").resolve("libs")
+    assemble {
+        dependsOn(shadowJar)
+    }
 
     compileTestJava {
         enabled = false

@@ -31,12 +31,18 @@ repositories {
     maven { url = uri("https://maven.minecraftforge.net/") }
 }
 
+val shade: Configuration by configurations.creating
+
+configurations.named("implementation") {
+    extendsFrom(shade)
+}
+
 dependencies {
     implementation(minecraft.dependency("net.minecraftforge:forge:${minecraftVersion}-${forgeVersion}"))
     compileOnly(project.project(":common").sourceSets.main.get().output)
     compileOnly(project.project(":server-common").sourceSets.main.get().output)
 
-    implementation("de.voxelmap:voxelconfig:${voxelConfigVersion}")
+    shade("de.voxelmap:voxelconfig:${voxelConfigVersion}")
     compileOnly("com.geckolib:geckolib-common-${minecraftVersion}:${geckolibVersion}")
 }
 
@@ -99,6 +105,12 @@ tasks {
     jar {
         manifest {
             attributes["MixinConfigs"] = "mixin.voxelmap.json,mixin.voxelmap.forge.json"
+        }
+
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+        from(shade.map { if (it.isDirectory) it else zipTree(it) }) {
+            exclude("META-INF/MANIFEST.MF", "META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
         }
 
         from(rootDir.resolve("LICENSE.md"))

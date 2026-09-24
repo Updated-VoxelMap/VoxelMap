@@ -14,7 +14,7 @@ val modMenuVersion by extra { "21.0.0" }
 val paperApiVersion by extra { "[26.3.build,)" }
 val voxelConfigVersion by extra { "1.0.2" }
 val geckolibVersion by extra { "5.5.7" }
-val voxelMapVersion by extra { "1.16.12" }
+val voxelMapVersion by extra { "1.16.13" }
 
 val fullVersion by extra { "${minecraftVersion}-${voxelMapVersion}" }
 

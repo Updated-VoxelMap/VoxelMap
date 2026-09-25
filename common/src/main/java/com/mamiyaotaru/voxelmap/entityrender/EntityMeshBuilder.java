@@ -1,5 +1,6 @@
 package com.mamiyaotaru.voxelmap.entityrender;
 
+import com.mamiyaotaru.voxelmap.entityrender.compat.GeckolibCompat;
 import com.mamiyaotaru.voxelmap.rendering.EmptySubmitNodeCollector;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.QuadInstance;
@@ -72,6 +73,12 @@ public class EntityMeshBuilder {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void buildEntityMeshes(PoseStack matrix, VertexConsumer buffer, Entity entity, EntityRenderer renderer) {
+        // GeckoLib-rendered mobs (UntitledDuckMod's ducks and geese, for example) have no vanilla
+        // EntityModel to take apart, so hand them to GeckoLib's own geometry builder instead.
+        if (GeckolibCompat.buildEntityMeshes(matrix, buffer, entity, renderer)) {
+            return;
+        }
+
         EntityRenderState renderState = renderer.createRenderState(entity, 0.5F);
         renderer.submit(renderState, matrix, emptySubmitNodeCollector, minecraft.gameRenderer.gameRenderState().levelRenderState.cameraRenderState);
 

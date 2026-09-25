@@ -7,6 +7,7 @@ plugins {
 val minecraftVersion: String by rootProject.extra
 val fabricVersion: String by rootProject.extra
 val fabricApiVersion: String by rootProject.extra
+val geckolibVersion: String by rootProject.extra
 
 repositories {
 
@@ -17,6 +18,11 @@ dependencies {
 
     compileOnly("net.fabricmc:fabric-loader:${fabricVersion}")
     implementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
+
+    // Soft dependency: used only to build radar icons for GeckoLib-rendered mobs.
+    // Never present at runtime unless the user has GeckoLib installed, so every
+    // access goes through GeckolibCompat.
+    compileOnly("com.geckolib:geckolib-common-${minecraftVersion}:${geckolibVersion}")
 
     compileOnly("net.fabricmc:sponge-mixin:0.16.4+mixin.0.8.7")
     testImplementation("com.google.code.gson:gson:2.11.0")

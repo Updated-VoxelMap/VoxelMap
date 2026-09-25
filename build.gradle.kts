@@ -13,6 +13,8 @@ val fabricApiVersion by extra { "0.158.0+26.2" }
 val modMenuVersion by extra { "20.0.1" }
 val paperApiVersion by extra { "[26.2.build,)" }
 val voxelMapVersion by extra { "1.16.9" }
+// Compile-only: only used to build radar icons for GeckoLib-rendered mobs.
+val geckolibVersion by extra { "5.5.6" }
 
 val fullVersion by extra { "${minecraftVersion}-${voxelMapVersion}" }
 
@@ -37,6 +39,10 @@ subprojects {
         maven {
             name = "papermc"
             url = uri("https://repo.papermc.io/repository/maven-public/")
+        }
+        maven {
+            name = "Geckolib Maven"
+            url = uri("https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/")
         }
         maven { url = uri("https://api.modrinth.com/maven") }
     }

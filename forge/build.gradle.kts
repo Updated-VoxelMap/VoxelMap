@@ -34,7 +34,7 @@ repositories {
 
 val shade: Configuration by configurations.creating
 
-configurations.named("implementation") {
+configurations.named("compileOnly") {
     extendsFrom(shade)
 }
 
@@ -95,6 +95,10 @@ tasks {
         }
         from(serverCommonMain.resources.srcDirs) {
             duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
+
+        from({ shade.map { zipTree(it) } }) {
+            exclude("META-INF/**")
         }
 
         inputs.property("version", fullVersion)

@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("idea")
     id("net.fabricmc.fabric-loom")
+    id("com.gradleup.shadow")
 }
 
 val minecraftVersion: String by rootProject.extra
@@ -16,6 +17,12 @@ base {
     archivesName.set("voxelmap-fabric")
 }
 
+val shade: Configuration by configurations.creating
+
+configurations.named("localRuntime") {
+    extendsFrom(shade)
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:${minecraftVersion}")
 
@@ -23,7 +30,7 @@ dependencies {
     implementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
     compileOnly("maven.modrinth:modmenu:${modMenuVersion}")
 
-
+    shade("de.voxelmap:voxelconfig:${voxelConfigVersion}")
 
     implementation(project.project(":server-common").sourceSets.getByName("main").output)
     implementation(project.project(":common").sourceSets.getByName("main").output)
@@ -66,20 +73,32 @@ tasks {
     }
 
     jar {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-        from(zipTree(project.project(":common").tasks.named("shadowJar").map { (it as org.gradle.jvm.tasks.Jar).archiveFile }))
-        from(zipTree(project.project(":server-common").tasks.jar.get().archiveFile))
+        archiveClassifier.set("slim")
     }
 
-    jar.get().destinationDirectory = rootDir.resolve("build").resolve("libs")
+    shadowJar {
+        archiveClassifier.set("")
+        destinationDirectory = rootDir.resolve("build").resolve("libs")
+        configurations.set(listOf(shade))
+        relocate("de.voxelmap.voxelconfig", "com.mamiyaotaru.voxelmap.shadow.voxelconfig")
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+        from(project.project(":common").sourceSets.main.get().output.classesDirs)
+        from(project.project(":server-common").sourceSets.main.get().output)
+        from(rootDir.resolve("LICENSE.md"))
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
+    }
+
+    assemble {
+        dependsOn(shadowJar)
+    }
 }
 
 publishing {
     publications {
         register("mavenJava", MavenPublication::class) {
             artifactId = base.archivesName.get()
-            from(components["java"])
+            artifact(tasks.shadowJar)
         }
     }
 

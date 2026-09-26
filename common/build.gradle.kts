@@ -2,7 +2,6 @@ plugins {
     id("java")
     id("idea")
     id("net.fabricmc.fabric-loom")
-    id("com.gradleup.shadow")
 }
 
 val minecraftVersion: String by rootProject.extra
@@ -52,16 +51,9 @@ loom {
 }
 
 tasks {
-    shadowJar {
-        dependencies {
-            include(dependency("de.voxelmap:voxelconfig:.*"))
-        }
-    }
-    
     jar {
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         from(rootDir.resolve("LICENSE.md"))
-        // we no longer need manual zipTree because shadowJar handles it!
     }
 }
 

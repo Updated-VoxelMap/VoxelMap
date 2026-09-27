@@ -3,7 +3,7 @@ package com.mamiyaotaru.voxelmap.util;
 import com.mamiyaotaru.voxelmap.MapSettingsManager;
 import com.mamiyaotaru.voxelmap.VoxelConstants;
 import com.mamiyaotaru.voxelmap.WaypointManager;
-import com.mamiyaotaru.voxelmap.rendering.SubmitPass;
+import com.mamiyaotaru.voxelmap.rendering.MeshSubmitter;
 import com.mamiyaotaru.voxelmap.rendering.VoxelMapRenderTypes;
 import com.mamiyaotaru.voxelmap.textures.Sprite;
 import com.mamiyaotaru.voxelmap.textures.TextureAtlas;
@@ -70,17 +70,17 @@ public class WaypointContainer {
         if (renderables.isEmpty()) return;
 
         RenderTarget mainTarget = minecraft.gameRenderer.mainRenderTarget();
-        try (SubmitPass pass = new SubmitPass("VoxelMap Waypoint Pass", mainTarget.getColorTextureView(), Optional.empty(), mainTarget.getDepthTextureView(), OptionalDouble.empty())) {
+        try (MeshSubmitter submit = new MeshSubmitter("VoxelMap Waypoint Submit", mainTarget.getColorTextureView(), Optional.empty(), mainTarget.getDepthTextureView(), OptionalDouble.empty())) {
             if (options.showWaypointBeacons) {
-                renderWaypointBeams(pass, matrixStack, camera, partialTick);
+                renderWaypointBeams(submit, matrixStack, camera, partialTick);
             }
             if (options.showWaypointSigns) {
-                renderWaypointSigns(pass, matrixStack, camera, partialTick);
+                renderWaypointSigns(submit, matrixStack, camera, partialTick);
             }
         }
     }
 
-    public void renderWaypointBeams(SubmitPass pass, Matrix4fStack matrixStack, Camera camera, float partialTick) {
+    public void renderWaypointBeams(MeshSubmitter submit, Matrix4fStack matrixStack, Camera camera, float partialTick) {
         Vec3 cameraPos = camera.position();
         double bottomOfWorld = VoxelConstants.getPlayer().level().getMinY() - cameraPos.y;
 
@@ -94,11 +94,11 @@ public class WaypointContainer {
             int z = waypoint.getZ();
             double distance = Math.sqrt(waypoint.getDistanceSqToCamera(camera));
 
-            renderBeam(pass, matrixStack, camera, waypoint, distance, x - cameraPos.x, bottomOfWorld, z - cameraPos.z, partialTick);
+            renderBeam(submit, matrixStack, camera, waypoint, distance, x - cameraPos.x, bottomOfWorld, z - cameraPos.z, partialTick);
         }
     }
 
-    public void renderWaypointSigns(SubmitPass pass, Matrix4fStack matrixStack, Camera camera, float partialTick) {
+    public void renderWaypointSigns(MeshSubmitter submit, Matrix4fStack matrixStack, Camera camera, float partialTick) {
         if (minecraft.gui.hud.isHidden()) return;
 
         Vec3 cameraPos = camera.position();
@@ -135,9 +135,9 @@ public class WaypointContainer {
             boolean isPointedAt = renderable.getOffset() != INVALID_OFFSET && (shiftDown || renderable == last);
             if (waypointManager.isWaypointHighlight(waypoint)) {
                 // Render base waypoint
-                renderSign(pass, matrixStack, camera, waypoint, textureAtlas, isPointedAt, false, distance, x - cameraPos.x, y - cameraPos.y + 1.12, z - cameraPos.z);
+                renderSign(submit, matrixStack, camera, waypoint, textureAtlas, isPointedAt, false, distance, x - cameraPos.x, y - cameraPos.y + 1.12, z - cameraPos.z);
             }
-            renderSign(pass, matrixStack, camera, waypoint, textureAtlas, isPointedAt, isHighlighted, distance, x - cameraPos.x, y - cameraPos.y + 1.12, z - cameraPos.z);
+            renderSign(submit, matrixStack, camera, waypoint, textureAtlas, isPointedAt, isHighlighted, distance, x - cameraPos.x, y - cameraPos.y + 1.12, z - cameraPos.z);
         }
     }
 
@@ -170,7 +170,7 @@ public class WaypointContainer {
     /**
      * Edited from {@link net.minecraft.client.renderer.blockentity.BeaconRenderer}
      */
-    private void renderBeam(SubmitPass pass, Matrix4fStack matrixStack, Camera camera, Waypoint waypoint, double distance, double baseX, double baseY, double baseZ, float partialTick) {
+    private void renderBeam(MeshSubmitter submit, Matrix4fStack matrixStack, Camera camera, Waypoint waypoint, double distance, double baseX, double baseY, double baseZ, float partialTick) {
         int height = VoxelConstants.getClientWorld().getHeight();
         float spentTime = camera.entity().tickCount + partialTick;
         float texturePos = Mth.frac(spentTime * 0.2F - Mth.floor(spentTime * 0.1F));
@@ -186,9 +186,9 @@ public class WaypointContainer {
         float beamMinV = height * (0.5F / BeaconRenderer.SOLID_BEAM_RADIUS) + beamMaxV;
         int beamColor = waypoint.getUnifiedColor(1.0F);
 
-        pass.setRenderType(RenderTypes.beaconBeam(BeaconRenderer.BEAM_LOCATION, false));
-        pass.setOrder(0);
-        pass.submitGeometry(matrixStack, (pose, buffer) -> {
+        submit.setRenderType(RenderTypes.beaconBeam(BeaconRenderer.BEAM_LOCATION, false));
+        submit.setOrder(0);
+        submit.submitGeometry(matrixStack, (pose, buffer) -> {
             for (int face = 0; face < 4; ++face) {
                 float x = (face == 0 || face == 3) ? -beamRadius : beamRadius;
                 float z = (face < 2) ? -beamRadius : beamRadius;
@@ -209,9 +209,9 @@ public class WaypointContainer {
         float glowMinV = height + beamMaxV;
         int glowColor = waypoint.getUnifiedColor(0.125F);
 
-        pass.setRenderType(RenderTypes.beaconBeam(BeaconRenderer.BEAM_LOCATION, true));
-        pass.setOrder(1);
-        pass.submitGeometry(matrixStack, (pose, buffer) -> {
+        submit.setRenderType(RenderTypes.beaconBeam(BeaconRenderer.BEAM_LOCATION, true));
+        submit.setOrder(1);
+        submit.submitGeometry(matrixStack, (pose, buffer) -> {
             for (int face = 0; face < 4; ++face) {
                 float x = (face == 0 || face == 3) ? -glowRadius : glowRadius;
                 float z = (face < 2) ? -glowRadius : glowRadius;
@@ -228,7 +228,7 @@ public class WaypointContainer {
         matrixStack.popMatrix();
     }
 
-    private void renderSign(SubmitPass pass, Matrix4fStack matrixStack, Camera camera, Waypoint waypoint, TextureAtlas textureAtlas, boolean isPointedAt, boolean isHighlighted, double distance, double baseX, double baseY, double baseZ) {
+    private void renderSign(MeshSubmitter submit, Matrix4fStack matrixStack, Camera camera, Waypoint waypoint, TextureAtlas textureAtlas, boolean isPointedAt, boolean isHighlighted, double distance, double baseX, double baseY, double baseZ) {
         String mainLabel = waypoint.name;
         if (isHighlighted) {
             mainLabel = waypointManager.isCoordinateHighlight(waypoint) ? "X:" + waypoint.getX() + ", Y:" + waypoint.getY() + ", Z:" + waypoint.getZ() : "";
@@ -268,12 +268,12 @@ public class WaypointContainer {
         }
 
         int iconColor = ARGB.colorFromFloat(fade, r, g, b);
-        pass.setOrder(0);
-        renderIcon(pass, matrixStack, getIconRenderType(focused, true, icon.getIdentifier()), icon, width, iconColor);
+        submit.setOrder(0);
+        renderIcon(submit, matrixStack, getIconRenderType(focused, true, icon.getIdentifier()), icon, width, iconColor);
 
         iconColor = ARGB.colorFromFloat(0.3F * fade, r, g, b);
-        pass.setOrder(1);
-        renderIcon(pass, matrixStack, getIconRenderType(focused, false, icon.getIdentifier()), icon, width, iconColor);
+        submit.setOrder(1);
+        renderIcon(submit, matrixStack, getIconRenderType(focused, false, icon.getIdentifier()), icon, width, iconColor);
 
         if (isPointedAt && !hideLabels && options.waypointSignLayout != 0) {
             String distanceLabel;
@@ -297,17 +297,17 @@ public class WaypointContainer {
 
             int backgroundColor = ARGB.colorFromFloat(0.6F * fade, r, g, b);
             int foregroundColor = ARGB.colorFromFloat(0.15F * fade, 0.0F, 0.0F, 0.0F);
-            pass.setOrder(0);
-            renderLabelBackgrounds(pass, matrixStack, getLabelRenderType(focused, true), mainLabel, subLabel, mainLabelY, subLabelY, backgroundColor, foregroundColor);
+            submit.setOrder(0);
+            renderLabelBackgrounds(submit, matrixStack, getLabelRenderType(focused, true), mainLabel, subLabel, mainLabelY, subLabelY, backgroundColor, foregroundColor);
 
             backgroundColor = ARGB.colorFromFloat(0.15F * fade, r, g, b);
             foregroundColor = ARGB.colorFromFloat(0.15F * fade, 0.0F, 0.0F, 0.0F);
-            pass.setOrder(1);
-            renderLabelBackgrounds(pass, matrixStack, getLabelRenderType(focused, false), mainLabel, subLabel, mainLabelY, subLabelY, backgroundColor, foregroundColor);
+            submit.setOrder(1);
+            renderLabelBackgrounds(submit, matrixStack, getLabelRenderType(focused, false), mainLabel, subLabel, mainLabelY, subLabelY, backgroundColor, foregroundColor);
 
             int textColor = (int) (255.0F * fade) << 24 | 0x00CCCCCC;
-            pass.setOrder(2);
-            renderLabels(pass, matrixStack, Font.DisplayMode.SEE_THROUGH, mainLabel, subLabel, mainLabelY, subLabelY, textColor);
+            submit.setOrder(2);
+            renderLabels(submit, matrixStack, Font.DisplayMode.SEE_THROUGH, mainLabel, subLabel, mainLabelY, subLabelY, textColor);
         }
         matrixStack.popMatrix();
     }
@@ -325,9 +325,9 @@ public class WaypointContainer {
         return (roundDist / 10) + "." + (roundDist % 10);
     }
 
-    private void renderIcon(SubmitPass pass, Matrix4fStack matrixStack, RenderType renderType, Sprite icon, float size, int color) {
-        pass.setRenderType(renderType);
-        pass.submitGeometry(matrixStack, (pose, buffer) -> {
+    private void renderIcon(MeshSubmitter submit, Matrix4fStack matrixStack, RenderType renderType, Sprite icon, float size, int color) {
+        submit.setRenderType(renderType);
+        submit.submitGeometry(matrixStack, (pose, buffer) -> {
             buffer.addVertex(pose, -size, -size, 0.0F).setUv(icon.getMinU(), icon.getMinV()).setColor(color);
             buffer.addVertex(pose, -size, size, 0.0F).setUv(icon.getMinU(), icon.getMaxV()).setColor(color);
             buffer.addVertex(pose, size, size, 0.0F).setUv(icon.getMaxU(), icon.getMaxV()).setColor(color);
@@ -335,10 +335,10 @@ public class WaypointContainer {
         });
     }
 
-    private void renderLabels(SubmitPass pass, Matrix4fStack matrixStack, Font.DisplayMode displayMode, String mainLabel, String subLabel, int mainLabelY, int subLabelY, int color) {
+    private void renderLabels(MeshSubmitter submit, Matrix4fStack matrixStack, Font.DisplayMode displayMode, String mainLabel, String subLabel, int mainLabelY, int subLabelY, int color) {
         if (!mainLabel.isEmpty()) {
             float halfWidth = minecraft.font.width(mainLabel) / 2.0F;
-            pass.submitText(matrixStack, -halfWidth, mainLabelY, 0.0F, mainLabel, false, displayMode, LIGHT, color, 0x00000000, 0x00000000);
+            submit.submitText(matrixStack, -halfWidth, mainLabelY, 0.0F, mainLabel, false, displayMode, LIGHT, color, 0x00000000, 0x00000000);
         }
 
         if (!subLabel.isEmpty()) {
@@ -346,13 +346,13 @@ public class WaypointContainer {
             float scale = 0.75F;
             matrixStack.pushMatrix();
             matrixStack.scale(scale, scale, 1.0F);
-            pass.submitText(matrixStack, -halfWidth, subLabelY, 0.0F, subLabel, false, displayMode, LIGHT, color, 0x00000000, 0x00000000);
+            submit.submitText(matrixStack, -halfWidth, subLabelY, 0.0F, subLabel, false, displayMode, LIGHT, color, 0x00000000, 0x00000000);
             matrixStack.popMatrix();
         }
     }
 
-    private void renderLabelBackgrounds(SubmitPass pass, Matrix4fStack matrixStack, RenderType renderType, String mainLabel, String subLabel, int mainLabelY, int subLabelY, int color1, int color2) {
-        pass.setRenderType(renderType);
+    private void renderLabelBackgrounds(MeshSubmitter submit, Matrix4fStack matrixStack, RenderType renderType, String mainLabel, String subLabel, int mainLabelY, int subLabelY, int color1, int color2) {
+        submit.setRenderType(renderType);
 
         if (!mainLabel.isEmpty()) {
             float halfWidth = minecraft.font.width(mainLabel) / 2.0F;
@@ -362,7 +362,7 @@ public class WaypointContainer {
             float y00 = mainLabelY - 2.0F;
             float y01 = mainLabelY + 9.0F;
 
-            pass.submitGeometry(matrixStack, (pose, buffer) -> {
+            submit.submitGeometry(matrixStack, (pose, buffer) -> {
                 buffer.addVertex(pose, x00, y00, 0.0F).setColor(color1);
                 buffer.addVertex(pose, x00, y01, 0.0F).setColor(color1);
                 buffer.addVertex(pose, x01, y01, 0.0F).setColor(color1);
@@ -374,7 +374,7 @@ public class WaypointContainer {
             float y10 = mainLabelY - 1.0F;
             float y11 = mainLabelY + 8.0F;
 
-            pass.submitGeometry(matrixStack, (pose, buffer) -> {
+            submit.submitGeometry(matrixStack, (pose, buffer) -> {
                 buffer.addVertex(pose, x10, y10, 0.0F).setColor(color2);
                 buffer.addVertex(pose, x10, y11, 0.0F).setColor(color2);
                 buffer.addVertex(pose, x11, y11, 0.0F).setColor(color2);
@@ -391,7 +391,7 @@ public class WaypointContainer {
             float y00 = (subLabelY - 2) * scale;
             float y01 = (subLabelY + 9) * scale;
 
-            pass.submitGeometry(matrixStack, (pose, buffer) -> {
+            submit.submitGeometry(matrixStack, (pose, buffer) -> {
                 buffer.addVertex(pose, x00, y00, 0.0F).setColor(color1);
                 buffer.addVertex(pose, x00, y01, 0.0F).setColor(color1);
                 buffer.addVertex(pose, x01, y01, 0.0F).setColor(color1);
@@ -403,7 +403,7 @@ public class WaypointContainer {
             float y10 = (subLabelY - 1) * scale;
             float y11 = (subLabelY + 8) * scale;
 
-            pass.submitGeometry(matrixStack, (pose, buffer) -> {
+            submit.submitGeometry(matrixStack, (pose, buffer) -> {
                 buffer.addVertex(pose, x10, y10, 0.0F).setColor(color2);
                 buffer.addVertex(pose, x10, y11, 0.0F).setColor(color2);
                 buffer.addVertex(pose, x11, y11, 0.0F).setColor(color2);

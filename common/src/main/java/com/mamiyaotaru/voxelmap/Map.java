@@ -8,8 +8,9 @@ import com.mamiyaotaru.voxelmap.interfaces.IChangeObserver;
 import com.mamiyaotaru.voxelmap.interfaces.IReloadListener;
 import com.mamiyaotaru.voxelmap.persistent.GuiPersistentMap;
 import com.mamiyaotaru.voxelmap.rendering.CachedProjectionMatrixBuffer;
+import com.mamiyaotaru.voxelmap.rendering.GuiSubmitter;
+import com.mamiyaotaru.voxelmap.rendering.MeshSubmitter;
 import com.mamiyaotaru.voxelmap.rendering.RenderUtils;
-import com.mamiyaotaru.voxelmap.rendering.SubmitPass;
 import com.mamiyaotaru.voxelmap.rendering.VoxelMapRenderTarget;
 import com.mamiyaotaru.voxelmap.rendering.VoxelMapRenderTypes;
 import com.mamiyaotaru.voxelmap.textures.ConfiguredDynamicTexture;
@@ -47,6 +48,7 @@ import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.OutOfMemoryScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureContents;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.language.I18n;
@@ -74,6 +76,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4fStack;
 import org.joml.Vector4f;
 
@@ -86,9 +89,9 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
     private final Random generator = new Random();
 
     // Map UI
-    private static final float MAP_IMAGE_DEPTH = 0.0F;
-    private static final float MAP_OVERLAY_DEPTH = 100.0F;
-    private static final float MAP_TEXT_DEPTH = 200.0F;
+    private static final int MAP_IMAGE_ORDER = 0;
+    private static final int MAP_OVERLAY_ORDER = 1;
+    private static final int MAP_TEXT_ORDER = 2;
     private final Identifier resourceArrow = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, "images/minimap/minimap_arrow.png");
     private final Identifier resourceSquareMapFrame = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, "images/minimap/square_map_frame.png");
     private final Identifier resourceSquareMapStencil = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, "images/minimap/square_map_stencil.png");
@@ -167,10 +170,8 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
     private boolean worldIsEther;
 
     // Map Rendering
-    private final CachedProjectionMatrixBuffer hudProjection;
     private final CachedProjectionMatrixBuffer mapProjection;
-    private final VoxelMapRenderTarget baseMapRenderTarget; // for map, radar, etc.
-    private final VoxelMapRenderTarget finalMapRenderTarget; // for masking
+    private final VoxelMapRenderTarget mapRenderTarget;
 
     public Map() {
         this.options = VoxelConstants.getVoxelMapInstance().getMapOptions();
@@ -215,16 +216,11 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
         this.zoom = this.options.zoom;
         this.setZoomScale();
 
-        this.hudProjection = CachedProjectionMatrixBuffer.orthographic("VoxelMap HUD Projection", 1000.0F, 21000.0F, true);
         this.mapProjection = CachedProjectionMatrixBuffer.orthographic("VoxelMap Map Projection", 1000.0F, 21000.0F, true);
 
         final int fboTextureSize = 512;
-
-        this.baseMapRenderTarget = new VoxelMapRenderTarget("VoxelMap Base Map Target", GpuFormat.RGBA8_UNORM, GpuFormat.D32_FLOAT);
-        this.baseMapRenderTarget.createBuffers(fboTextureSize, fboTextureSize);
-
-        this.finalMapRenderTarget = new VoxelMapRenderTarget("VoxelMap Final Map Target", GpuFormat.RGBA8_UNORM, GpuFormat.D32_FLOAT);
-        this.finalMapRenderTarget.createBuffers(fboTextureSize, fboTextureSize);
+        this.mapRenderTarget = new VoxelMapRenderTarget("VoxelMap Map Target", GpuFormat.RGBA8_UNORM, GpuFormat.D32_FLOAT);
+        this.mapRenderTarget.createBuffers(fboTextureSize, fboTextureSize);
     }
 
     private Thread createZCalcThread() {
@@ -661,31 +657,23 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
                 this.zoomScaleAdjusted
         );
 
-        VoxelMapRenderTarget fullscreenTarget = RenderUtils.getFullscreenTarget();
-        boolean lastShaderRendering = RenderUtils.setShaderRendering(false);
-        RenderUtils.setupProjectionMatrix(hudProjection.getBuffer(RenderUtils.getGuiWidth(), RenderUtils.getGuiHeight()), ProjectionType.ORTHOGRAPHIC, -2000.0F);
-        Matrix4fStack matrixStack = RenderUtils.getMatrixStack();
+        Matrix3x2fStack matrixStack = graphics.pose();
         matrixStack.pushMatrix();
-        matrixStack.identity();
-        try (SubmitPass pass = RenderUtils.createSubmitPass("VoxelMap HUD", fullscreenTarget, new Vector4f(0.0F, 0.0F, 0.0F, 0.0F), 0.0)) {
+        try (GuiSubmitter submit = new GuiSubmitter("VoxelMap HUD", graphics)) {
             if (!this.options.hide) {
                 if (this.fullscreenMap) {
-                    this.renderMapFull(pass, matrixStack, scWidth, scHeight, scaleProj);
-                    this.drawArrow(pass, matrixStack, scWidth / 2, scHeight / 2, scaleProj);
+                    this.renderMapFull(submit, matrixStack, scWidth, scHeight, scaleProj);
+                    this.drawArrow(submit, matrixStack, scWidth / 2, scHeight / 2, scaleProj);
                 } else {
-                    this.renderMap(pass, matrixStack, mapX, mapY, scScale, scaleProj);
-                    this.drawArrow(pass, matrixStack, mapX, mapY, scaleProj);
-                    this.drawDirections(pass, matrixStack, mapX, mapY, scaleProj);
+                    this.renderMap(submit, matrixStack, mapX, mapY, scScale, scaleProj);
+                    this.drawArrow(submit, matrixStack, mapX, mapY, scaleProj);
+                    this.drawDirections(submit, matrixStack, mapX, mapY, scaleProj);
                 }
             }
-            this.showCoords(pass, matrixStack, mapX, mapY, scaleProj);
+            this.showCoords(submit, matrixStack, mapX, mapY, scaleProj);
         } finally {
             matrixStack.popMatrix();
-            RenderUtils.restoreProjectionMatrix();
-            RenderUtils.setShaderRendering(lastShaderRendering);
         }
-
-        RenderUtils.blitToScreen(graphics, fullscreenTarget.getColorTextureView(), 0.0F, 0.0F, RenderUtils.getGuiWidth(), RenderUtils.getGuiHeight(), 0xFFFFFFFF);
     }
 
     private void checkForChanges() {
@@ -1512,10 +1500,9 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
     }
 
 
-    private void renderMap(SubmitPass pass, Matrix4fStack matrixStack, int x, int y, int scScale, float scaleProj) {
+    private void renderMap(GuiSubmitter submit, Matrix3x2fStack matrixStack, int x, int y, int scScale, float scaleProj) {
         matrixStack.pushMatrix();
-        try {
-        matrixStack.scale(scaleProj, scaleProj, 1.0F);
+        matrixStack.scale(scaleProj, scaleProj);
 
         synchronized (this.coordinateLock) {
             if (this.imageChanged) {
@@ -1527,13 +1514,13 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
         }
 
         RenderUtils.setupProjectionMatrix(mapProjection.getBuffer(512.0f, 512.0F), ProjectionType.ORTHOGRAPHIC, -2000.0F);
-        matrixStack.pushMatrix();
-        try {
-        matrixStack.identity();
-        matrixStack.translate(256.0F, 256.0F, 0.0F);
+        Matrix4fStack mapMatrix = RenderUtils.getMatrixStack();
+        mapMatrix.pushMatrix();
+        mapMatrix.identity();
+        mapMatrix.translate(256.0F, 256.0F, 0.0F);
 
         // Draw map, radar, etc.
-        try (SubmitPass basePass = RenderUtils.createSubmitPass("VoxelMap Base Map", baseMapRenderTarget, new Vector4f(0.0F, 0.0F, 0.0F, 0.0F), 0.0)) {
+        try (MeshSubmitter mapSubmit = RenderUtils.createMeshSubmitter("VoxelMap Map Submit", mapRenderTarget, new Vector4f(0.0F, 0.0F, 0.0F, 0.0F), 0.0)) {
             float matrixScale = 512.0F / 64.0F;
             float scale = 1.0F;
             if (this.options.squareMap && this.options.rotates) {
@@ -1543,55 +1530,41 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
             float percentX = (float) (GameVariableAccessShim.xCoordDouble() - this.lastImageX) * multi;
             float percentY = (float) (GameVariableAccessShim.zCoordDouble() - this.lastImageZ) * multi;
 
-            matrixStack.pushMatrix();
+            mapMatrix.pushMatrix();
             if (!options.rotates) {
-                matrixStack.rotate(Axis.ZP.rotationDegrees(rotationFactor));
+                mapMatrix.rotate(Axis.ZP.rotationDegrees(rotationFactor));
             } else {
-                matrixStack.rotate(Axis.ZP.rotationDegrees(-direction));
+                mapMatrix.rotate(Axis.ZP.rotationDegrees(-direction));
             }
-            matrixStack.scale(scale, scale, 1.0F);
-            matrixStack.translate(-percentX * matrixScale, -percentY * matrixScale, 0.0F);
+            mapMatrix.scale(scale, scale, 1.0F);
+            mapMatrix.translate(-percentX * matrixScale, -percentY * matrixScale, 0.0F);
 
-            basePass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(mapResources[zoom]));
-            basePass.submitQuad(matrixStack, -256.0F, -256.0F, 0.0F, 512.0F, 512.0F, 0xFFFFFFFF);
-            basePass.nextDraw();
-            matrixStack.popMatrix();
+            mapSubmit.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(mapResources[zoom]));
+            mapSubmit.submitQuad(mapMatrix, -256.0F, -256.0F, 0.0F, 512.0F, 512.0F, 0xFFFFFFFF);
+            mapSubmit.nextDraw();
+            mapMatrix.popMatrix();
 
             if (VoxelConstants.getVoxelMapInstance().getRadar() != null) {
                 VoxelConstants.getVoxelMapInstance().getRadar().onTickInGame(minimapContext);
-                VoxelConstants.getVoxelMapInstance().getRadar().renderMapMobs(basePass, matrixStack, Contact.DisplayState.BELOW_FRAME, 0, 0, scScale, matrixScale);
+                VoxelConstants.getVoxelMapInstance().getRadar().renderMapMobs(mapSubmit, mapMatrix, Contact.DisplayState.BELOW_FRAME, 0, 0, scScale, matrixScale);
             }
-        }
-
-        // Masking the drawn map
-        try (SubmitPass finalPass = RenderUtils.createSubmitPass("VoxelMap Final Map", finalMapRenderTarget, new Vector4f(0.0F, 0.0F, 0.0F, 0.0F), 0.0)) {
-            finalPass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_ANY_DEPTH.apply(options.squareMap ? resourceSquareMapStencil : resourceRoundMapStencil));
-            finalPass.submitQuad(matrixStack, -256.0F, -256.0F, 0.0F, 512.0F, 512.0F, 0xFFFFFFFF);
-            finalPass.nextDraw();
-
-            finalPass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_ANY_DEPTH_MASKED.apply(baseMapRenderTarget.textureId));
-            finalPass.submitBlit(matrixStack, -256.0F, -256.0F, 0.0F, 512.0F, 512.0F, 0xFFFFFFFF);
-        }
         } finally {
-            matrixStack.popMatrix();
+            mapMatrix.popMatrix();
             RenderUtils.restoreProjectionMatrix();
         }
 
         double guiScale = (double) minecraft.getWindow().getWidth() / this.scWidth;
         minTablistOffset = guiScale * 63;
 
+        submit.setOrder(MAP_IMAGE_ORDER);
+        submit.submitBlit(matrixStack, RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA, mapRenderTarget.getTexture(), x - 32.0F, y - 32.0F, 64.0F, 64.0F, 0xFFFFFFFF);
+        // TODO: draw map image
 
-        pass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(finalMapRenderTarget.textureId));
-        pass.submitBlit(matrixStack, x - 32.0F, y - 32.0F, MAP_IMAGE_DEPTH, 64.0F, 64.0F, 0xFFFFFFFF);
-        pass.nextDraw();
-
-        pass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(options.squareMap ? resourceSquareMapFrame : resourceRoundMapFrame));
-        pass.submitQuad(matrixStack, x - 32.0F, y - 32.0F, MAP_OVERLAY_DEPTH, 64.0F, 64.0F, 0xFFFFFFFF);
-        pass.nextDraw();
+        submit.setOrder(MAP_OVERLAY_ORDER);
+        submit.submitQuad(matrixStack, RenderPipelines.GUI_TEXTURED, options.squareMap ? resourceSquareMapFrame : resourceRoundMapFrame, x - 32.0F, y - 32.0F, 64.0F, 64.0F, 0xFFFFFFFF);
 
         if (options.waypointsAllowed) {
             TextureAtlas textureAtlas = VoxelConstants.getVoxelMapInstance().getWaypointManager().getTextureAtlas();
-            pass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(textureAtlas.getIdentifier()));
             double lastXDouble = GameVariableAccessShim.xCoordDouble();
             double lastZDouble = GameVariableAccessShim.zCoordDouble();
 
@@ -1601,24 +1574,21 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
                     double distanceSq = waypoint.getDistanceSqToEntity(minecraft.getCameraEntity());
                     boolean isOutOfRange = options.maxWaypointDisplayDistance >= 0 && distanceSq >= (options.maxWaypointDisplayDistance * options.maxWaypointDisplayDistance);
                     if (!isOutOfRange || isHighlighted) {
-                        drawWaypoint(pass, matrixStack, x, y, waypoint, textureAtlas, null, isHighlighted, -1, lastXDouble, lastZDouble);
+                        drawWaypoint(submit, matrixStack, x, y, waypoint, textureAtlas, null, isHighlighted, -1, lastXDouble, lastZDouble);
                     }
                 }
             }
 
             Waypoint highlightedPoint = waypointManager.getHighlightedWaypoint();
             if (highlightedPoint != null) {
-                drawWaypoint(pass, matrixStack, x, y, highlightedPoint, textureAtlas, textureAtlas.getAtlasSprite("marker/target"), true, 0xFFFF0000, lastXDouble, lastZDouble);
+                drawWaypoint(submit, matrixStack, x, y, highlightedPoint, textureAtlas, textureAtlas.getAtlasSprite("marker/target"), true, 0xFFFF0000, lastXDouble, lastZDouble);
             }
         }
 
-        pass.nextDraw();
-        } finally {
-            matrixStack.popMatrix();
-        }
+        matrixStack.popMatrix();
     }
 
-    private void drawWaypoint(SubmitPass pass, Matrix4fStack matrixStack, int x, int y, Waypoint waypoint, TextureAtlas textureAtlas, Sprite icon, boolean isHighlighted, int color, double baseX, double baseZ) {
+    private void drawWaypoint(GuiSubmitter submit, Matrix3x2fStack matrixStack, int x, int y, Waypoint waypoint, TextureAtlas textureAtlas, Sprite icon, boolean isHighlighted, int color, double baseX, double baseZ) {
         boolean uprightIcon = icon != null;
 
         double wayX = baseX - waypoint.getX() - 0.5;
@@ -1658,18 +1628,18 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
 
             try {
                 matrixStack.pushMatrix();
-                matrixStack.translate(x, y, 0.0F);
-                matrixStack.rotate(Axis.ZP.rotationDegrees(-locate));
+                matrixStack.translate(x, y);
+                matrixStack.rotate(Mth.DEG_TO_RAD * -locate);
                 if (uprightIcon) {
-                    matrixStack.translate(0.0F, -hypot, 0.0F);
-                    matrixStack.rotate(Axis.ZP.rotationDegrees(locate));
-                    matrixStack.translate(-x, -y, 0.0F);
+                    matrixStack.translate(0.0F, -hypot);
+                    matrixStack.rotate(Mth.DEG_TO_RAD * locate);
+                    matrixStack.translate(-x, -y);
                 } else {
-                    matrixStack.translate(-x, -y, 0.0F);
-                    matrixStack.translate(0.0F, -hypot, 0.0F);
+                    matrixStack.translate(-x, -y);
+                    matrixStack.translate(0.0F, -hypot);
                 }
 
-                pass.submitQuad(matrixStack, icon, x - 4.0F, y - 4.0F, MAP_OVERLAY_DEPTH, 8.0F, 8.0F, iconColor);
+                submit.submitSprite(matrixStack, RenderPipelines.GUI_TEXTURED, icon, x - 4.0F, y - 4.0F, 8.0F, 8.0F, iconColor);
             } catch (Exception var40) {
                 this.showMessage("Error: marker overlay not found!");
             } finally {
@@ -1685,11 +1655,11 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
 
             try {
                 matrixStack.pushMatrix();
-                matrixStack.rotate(Axis.ZP.rotationDegrees(-locate));
-                matrixStack.translate(0.0F, -hypot, 0.0F);
-                matrixStack.rotate(Axis.ZP.rotationDegrees(locate));
+                matrixStack.rotate(Mth.DEG_TO_RAD * -locate);
+                matrixStack.translate(0.0F, -hypot);
+                matrixStack.rotate(Mth.DEG_TO_RAD * locate);
 
-                pass.submitQuad(matrixStack, icon, x - 4.0F, y - 4.0F, MAP_OVERLAY_DEPTH, 8.0F, 8.0F, iconColor);
+            submit.submitSprite(matrixStack, RenderPipelines.GUI_TEXTURED, icon, x - 4.0F, y - 4.0F, 8.0F, 8.0F, iconColor);
             } catch (Exception var42) {
                 this.showMessage("Error: waypoint overlay not found!");
             } finally {
@@ -1698,22 +1668,21 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
         }
     }
 
-    private void drawArrow(SubmitPass pass, Matrix4fStack matrixStack, int x, int y, float scaleProj) {
+    private void drawArrow(GuiSubmitter submit, Matrix3x2fStack matrixStack, int x, int y, float scaleProj) {
         matrixStack.pushMatrix();
-        matrixStack.scale(scaleProj, scaleProj, 1.0F);
+        matrixStack.scale(scaleProj, scaleProj);
 
-        matrixStack.translate(x, y, 0.0F);
-        matrixStack.rotate(Axis.ZP.rotationDegrees(this.options.rotates && !this.fullscreenMap ? 0.0F : this.direction + this.rotationFactor));
-        matrixStack.translate(-x, -y, 0.0F);
+        matrixStack.translate(x, y);
+        matrixStack.rotate(Mth.DEG_TO_RAD * (options.rotates && !fullscreenMap ? 0.0F : direction + rotationFactor));
+        matrixStack.translate(-x, -y);
 
-        pass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(resourceArrow));
-        pass.submitQuad(matrixStack, x - 4.0F, y - 4.0F, MAP_OVERLAY_DEPTH, 8.0F, 8.0F, 0xFFFFFFFF);
-        pass.nextDraw();
+        submit.setOrder(MAP_OVERLAY_ORDER);
+        submit.submitQuad(matrixStack, RenderPipelines.GUI_TEXTURED, resourceArrow, x - 4.0F, y - 4.0F, 8.0F, 8.0F, 0xFFFFFFFF);
 
         matrixStack.popMatrix();
     }
 
-    private void renderMapFull(SubmitPass pass, Matrix4fStack matrixStack, int scWidth, int scHeight, float scaleProj) {
+    private void renderMapFull(GuiSubmitter submit, Matrix3x2fStack matrixStack, int scWidth, int scHeight, float scaleProj) {
         synchronized (this.coordinateLock) {
             if (this.imageChanged) {
                 this.imageChanged = false;
@@ -1723,17 +1692,17 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
             }
         }
         matrixStack.pushMatrix();
-        matrixStack.scale(scaleProj, scaleProj, 1.0F);
-        matrixStack.translate(scWidth / 2.0F, scHeight / 2.0F, 0.0F);
-        matrixStack.rotate(Axis.ZP.rotationDegrees(rotationFactor));
-        matrixStack.translate(-(scWidth / 2.0F), -(scHeight / 2.0F), 0.0F);
+        matrixStack.scale(scaleProj, scaleProj);
+        matrixStack.translate(scWidth / 2.0F, scHeight / 2.0F);
+        matrixStack.rotate(Mth.DEG_TO_RAD * rotationFactor);
+        matrixStack.translate(-scWidth / 2.0F, -scHeight / 2.0F);
         int left = scWidth / 2 - 128;
         int top = scHeight / 2 - 128;
-        pass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(mapResources[zoom]));
-        pass.submitQuad(matrixStack, left, top, MAP_IMAGE_DEPTH, 256.0F, 256.0F, 0xFFFFFFFF);
-        pass.nextDraw();
+        submit.setOrder(MAP_IMAGE_ORDER);
+        submit.submitQuad(matrixStack, RenderPipelines.GUI_TEXTURED, mapResources[zoom], left, top, 256.0F, 256.0F, 0xFFFFFFFF);
         matrixStack.popMatrix();
 
+        submit.setOrder(MAP_TEXT_ORDER);
         if (this.options.biomeOverlay != 0) {
             double factor = Math.pow(2.0, 3 - this.zoom);
             int minimumSize = (int) Math.pow(2.0, this.zoom);
@@ -1747,19 +1716,20 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
                     float x = (float) (o.x * factor);
                     float z = (float) (o.z * factor);
                     if (this.options.oldNorth) {
-                        pass.submitCenteredText(matrixStack, name, (left + 256) - z, top + x - 3.0F, MAP_TEXT_DEPTH, 0xFFFFFFFF, true);
+                        submit.submitCenteredText(matrixStack, name, (left + 256) - z, top + x - 3.0F, 0xFFFFFFFF, true);
                     } else {
-                        pass.submitCenteredText(matrixStack, name, left + x, top + z - 3.0F, MAP_TEXT_DEPTH, 0xFFFFFFFF, true);
+                        submit.submitCenteredText(matrixStack, name, left + x, top + z - 3.0F, 0xFFFFFFFF, true);
                     }
                 }
             }
 
-            pass.nextDraw();
             matrixStack.popMatrix();
         }
     }
 
-    private void drawDirections(SubmitPass pass, Matrix4fStack matrixStack, int x, int y, float scaleProj) {
+    private void drawDirections(GuiSubmitter submit, Matrix3x2fStack matrixStack, int x, int y, float scaleProj) {
+        submit.setOrder(MAP_TEXT_ORDER);
+
         float scale = 0.5F;
         float rotate;
         if (this.options.rotates) {
@@ -1782,31 +1752,32 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
         }
 
         matrixStack.pushMatrix();
-        matrixStack.scale(scaleProj, scaleProj, 1.0F);
-        matrixStack.scale(scale, scale, 1.0F);
+        matrixStack.scale(scaleProj, scaleProj);
+        matrixStack.scale(scale, scale);
 
         matrixStack.pushMatrix();
-        matrixStack.translate(distance * Mth.sin(-(rotate - 90.0F) * Mth.DEG_TO_RAD), distance * Mth.cos(-(rotate - 90.0F) * Mth.DEG_TO_RAD), 0.0F);
-        pass.submitCenteredText(matrixStack, "N", x / scale, y / scale - 4.0F, MAP_TEXT_DEPTH, 0xFFFFFFFF, true);
+        matrixStack.translate(distance * Mth.sin(-(rotate - 90.0F) * Mth.DEG_TO_RAD), distance * Mth.cos(-(rotate - 90.0F) * Mth.DEG_TO_RAD));
+        submit.submitCenteredText(matrixStack, "N", x / scale, y / scale - 4.0F, 0xFFFFFFFF, true);
         matrixStack.popMatrix();
         matrixStack.pushMatrix();
-        matrixStack.translate(distance * Mth.sin(-(rotate) * Mth.DEG_TO_RAD), distance * Mth.cos(-(rotate) * Mth.DEG_TO_RAD), 0.0F);
-        pass.submitCenteredText(matrixStack, "E", x / scale, y / scale - 4.0F, MAP_TEXT_DEPTH, 0xFFFFFFFF, true);
+        matrixStack.translate(distance * Mth.sin(-(rotate) * Mth.DEG_TO_RAD), distance * Mth.cos(-(rotate) * Mth.DEG_TO_RAD));
+        submit.submitCenteredText(matrixStack, "E", x / scale, y / scale - 4.0F, 0xFFFFFFFF, true);
         matrixStack.popMatrix();
         matrixStack.pushMatrix();
-        matrixStack.translate(distance * Mth.sin(-(rotate + 90.0F) * Mth.DEG_TO_RAD), distance * Mth.cos(-(rotate + 90.0F) * Mth.DEG_TO_RAD), 0.0F);
-        pass.submitCenteredText(matrixStack, "S", x / scale, y / scale - 4.0F, MAP_TEXT_DEPTH, 0xFFFFFFFF, true);
+        matrixStack.translate(distance * Mth.sin(-(rotate + 90.0F) * Mth.DEG_TO_RAD), distance * Mth.cos(-(rotate + 90.0F) * Mth.DEG_TO_RAD));
+        submit.submitCenteredText(matrixStack, "S", x / scale, y / scale - 4.0F, 0xFFFFFFFF, true);
         matrixStack.popMatrix();
         matrixStack.pushMatrix();
-        matrixStack.translate(distance * Mth.sin(-(rotate + 180.0F) * Mth.DEG_TO_RAD), distance * Mth.cos(-(rotate + 180.0F) * Mth.DEG_TO_RAD), 0.0F);
-        pass.submitCenteredText(matrixStack, "W", x / scale, y / scale - 4.0F, MAP_TEXT_DEPTH, 0xFFFFFFFF, true);
+        matrixStack.translate(distance * Mth.sin(-(rotate + 180.0F) * Mth.DEG_TO_RAD), distance * Mth.cos(-(rotate + 180.0F) * Mth.DEG_TO_RAD));
+        submit.submitCenteredText(matrixStack, "W", x / scale, y / scale - 4.0F, 0xFFFFFFFF, true);
         matrixStack.popMatrix();
 
-        pass.nextDraw();
         matrixStack.popMatrix();
     }
 
-    private void showCoords(SubmitPass pass, Matrix4fStack matrixStack, int x, int y, float scaleProj) {
+    private void showCoords(GuiSubmitter submit, Matrix3x2fStack matrixStack, int x, int y, float scaleProj) {
+        submit.setOrder(MAP_TEXT_ORDER);
+
         if (!this.options.hide && !this.fullscreenMap) {
             int textStart;
             if (y > this.scHeight - 37 - 32 - 4 - 15) {
@@ -1818,32 +1789,32 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
             int lineHeight = 10;
             float scale = 0.5F;
             matrixStack.pushMatrix();
-            matrixStack.scale(scale * scaleProj, scale * scaleProj, 1.0F);
+            matrixStack.scale(scale * scaleProj, scale * scaleProj);
 
             String coords;
 
             if (this.options.coordsMode == 1) {
                 coords = this.dCoord(GameVariableAccessShim.xCoord()) + ", " + this.dCoord(GameVariableAccessShim.zCoord());
-                pass.submitCenteredText(matrixStack, coords, x / scale, textStart / scale + lineHeight * lineCount, MAP_TEXT_DEPTH, 0xFFFFFFFF, true); // X, Z
+                submit.submitCenteredText(matrixStack, coords, x / scale, textStart / scale + lineHeight * lineCount, 0xFFFFFFFF, true); // X, Z
                 lineCount++;
 
                 coords = this.dCoord(GameVariableAccessShim.yCoord());
-                pass.submitCenteredText(matrixStack, coords, x / scale, textStart / scale + lineHeight * lineCount, MAP_TEXT_DEPTH, 0xFFFFFFFF, true); // Y
+                submit.submitCenteredText(matrixStack, coords, x / scale, textStart / scale + lineHeight * lineCount, 0xFFFFFFFF, true); // Y
                 lineCount++;
             } else if (this.options.coordsMode == 2) {
                 coords = GameVariableAccessShim.xCoord() + ", " + GameVariableAccessShim.yCoord() + ", " + GameVariableAccessShim.zCoord();
-                pass.submitCenteredText(matrixStack, coords, x / scale, textStart / scale + lineHeight * lineCount, MAP_TEXT_DEPTH, 0xFFFFFFFF, true); // X, Z
+                submit.submitCenteredText(matrixStack, coords, x / scale, textStart / scale + lineHeight * lineCount, 0xFFFFFFFF, true); // X, Z
                 lineCount++;
             }
 
             if (this.options.showBiome) {
                 coords = BiomeRepository.getName(this.lastBiome);
-                pass.submitCenteredText(matrixStack, coords, x / scale, textStart / scale + lineHeight * lineCount, MAP_TEXT_DEPTH, 0xFFFFFFFF, true); // BIOME
+                submit.submitCenteredText(matrixStack, coords, x / scale, textStart / scale + lineHeight * lineCount, 0xFFFFFFFF, true); // BIOME
                 lineCount++;
             }
 
             if (!this.message.isEmpty()) {
-                pass.submitCenteredText(matrixStack, this.message, x / scale, textStart / scale + lineHeight * lineCount, MAP_TEXT_DEPTH, 0xFFFFFFFF, true); // WORLD NAME
+                submit.submitCenteredText(matrixStack, this.message, x / scale, textStart / scale + lineHeight * lineCount, 0xFFFFFFFF, true); // WORLD NAME
                 lineCount++;
             }
 
@@ -1873,11 +1844,11 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
 
                 String direction = I18n.get("minimap.ui." + ns + ew);
                 String stats = "(" + this.dCoord(GameVariableAccessShim.xCoord()) + ", " + this.dCoord(GameVariableAccessShim.yCoord()) + ", " + this.dCoord(GameVariableAccessShim.zCoord()) + ") " + heading + "' " + direction;
-                pass.submitCenteredText(matrixStack, stats, (this.scWidth * scaleProj / 2.0F), textStart + lineHeight * lineCount, MAP_TEXT_DEPTH, 0xFFFFFFFF, true);
+                submit.submitCenteredText(matrixStack, stats, (this.scWidth * scaleProj / 2.0F), textStart + lineHeight * lineCount, 0xFFFFFFFF, true);
                 lineCount++;
             }
             if (!this.message.isEmpty()) {
-                pass.submitCenteredText(matrixStack, this.message, (this.scWidth * scaleProj / 2.0F), textStart + lineHeight * lineCount, MAP_TEXT_DEPTH, 0xFFFFFFFF, true);
+                submit.submitCenteredText(matrixStack, this.message, (this.scWidth * scaleProj / 2.0F), textStart + lineHeight * lineCount, 0xFFFFFFFF, true);
                 lineCount++;
             }
         }

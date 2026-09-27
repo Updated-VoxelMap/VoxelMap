@@ -3,7 +3,7 @@ package com.mamiyaotaru.voxelmap.interfaces;
 import com.mamiyaotaru.voxelmap.MapSettingsManager;
 import com.mamiyaotaru.voxelmap.RadarSettingsManager;
 import com.mamiyaotaru.voxelmap.VoxelConstants;
-import com.mamiyaotaru.voxelmap.rendering.SubmitPass;
+import com.mamiyaotaru.voxelmap.rendering.MeshSubmitter;
 import com.mamiyaotaru.voxelmap.util.Contact;
 import com.mamiyaotaru.voxelmap.util.MinimapContext;
 import com.mamiyaotaru.voxelmap.util.VoxelMapMobCategory;
@@ -35,7 +35,7 @@ public abstract class AbstractRadar implements IReloadListener {
     @Override
     public abstract void onResourceManagerReload(ResourceManager resourceManager);
 
-    public abstract void renderMapMobs(SubmitPass pass, Matrix4fStack matrixStack, Contact.DisplayState displayState, int x, int y, int scScale, float scaleProj);
+    public abstract void renderMapMobs(MeshSubmitter submit, Matrix4fStack matrixStack, Contact.DisplayState displayState, int x, int y, int scScale, float scaleProj);
 
     protected abstract void initContact(Contact contact);
 

@@ -2,7 +2,7 @@ package com.mamiyaotaru.voxelmap;
 
 import com.mamiyaotaru.voxelmap.entityrender.EntityMapImageManager;
 import com.mamiyaotaru.voxelmap.interfaces.AbstractRadar;
-import com.mamiyaotaru.voxelmap.rendering.SubmitPass;
+import com.mamiyaotaru.voxelmap.rendering.MeshSubmitter;
 import com.mamiyaotaru.voxelmap.rendering.VoxelMapRenderTypes;
 import com.mamiyaotaru.voxelmap.util.Contact;
 import com.mamiyaotaru.voxelmap.util.MinimapContext;
@@ -73,8 +73,8 @@ public class Radar extends AbstractRadar {
     }
 
     @Override
-    public void renderMapMobs(SubmitPass pass, Matrix4fStack matrixStack, Contact.DisplayState displayState, int x, int y, int scScale, float scaleProj) {
-        pass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(EntityMapImageManager.resourceTextureAtlasMarker));
+    public void renderMapMobs(MeshSubmitter submit, Matrix4fStack matrixStack, Contact.DisplayState displayState, int x, int y, int scScale, float scaleProj) {
+        submit.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(EntityMapImageManager.resourceTextureAtlasMarker));
 
         matrixStack.pushMatrix();
         matrixStack.scale(scaleProj, scaleProj, 1.0F);
@@ -119,7 +119,7 @@ public class Radar extends AbstractRadar {
                 if (contact.icon != null) {
                     float width = contact.icon.getIconWidth() / 8.0F;
                     float height = contact.icon.getIconHeight() / 8.0F;
-                    pass.submitQuad(matrixStack, contact.icon, x - (width / 2.0F), y + yOffset - (height / 2.0F), zOffset, width, height, color);
+                    submit.submitQuad(matrixStack, contact.icon, x - (width / 2.0F), y + yOffset - (height / 2.0F), zOffset, width, height, color);
                 }
 
                 if (contact.armorIcon != null) {
@@ -128,14 +128,14 @@ public class Radar extends AbstractRadar {
 
                     float width = contact.armorIcon.getIconWidth() / 8.0F;
                     float height = contact.armorIcon.getIconHeight() / 8.0F;
-                    pass.submitQuad(matrixStack, contact.armorIcon, x - (width / 2.0F), y + yOffset - (height / 2.0F), zOffset, width, height, color);
+                    submit.submitQuad(matrixStack, contact.armorIcon, x - (width / 2.0F), y + yOffset - (height / 2.0F), zOffset, width, height, color);
                 }
 
                 if (contact.name != null && ((radarOptions.showPlayerNames && contact.category == VoxelMapMobCategory.PLAYER) || (radarOptions.showMobNames && contact.category != VoxelMapMobCategory.PLAYER))) {
                     float scaleFactor = radarOptions.fontScale / 4.0F;
                     matrixStack.pushMatrix();
                     matrixStack.scale(scaleFactor, scaleFactor, 1.0F);
-                    pass.submitCenteredText(matrixStack, contact.name, x / scaleFactor, (y + 3) / scaleFactor, zOffset, color, radarOptions.outlines);
+                    submit.submitCenteredText(matrixStack, contact.name, x / scaleFactor, (y + 3) / scaleFactor, zOffset, color, radarOptions.outlines);
                     matrixStack.popMatrix();
                 }
             } catch (Exception e) {

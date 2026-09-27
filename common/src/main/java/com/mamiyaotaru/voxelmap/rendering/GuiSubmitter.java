@@ -6,6 +6,7 @@ import java.util.Arrays;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
 import org.joml.Matrix3x2f;
@@ -51,7 +52,19 @@ public class GuiSubmitter implements AutoCloseable {
     }
 
     public void submitQuad(Matrix3x2f matrix, RenderPipeline pipeline, AbstractTexture texture, float x, float y, float w, float h, float u0, float u1, float v0, float v1, int color) {
-        addDraw(new Fill(new Matrix3x2f(matrix), pipeline, TextureSetup.singleTexture(texture.getTextureView(), texture.getSampler()), x, y, x + w, y + h, u0, u1, v0, v1, color, color));
+        addDraw(new SubmitBlit(new Matrix3x2f(matrix), pipeline, TextureSetup.singleTexture(texture.getTextureView(), texture.getSampler()), x, y, x + w, y + h, u0, u1, v0, v1, color, color));
+    }
+
+    public void submitFill(Matrix3x2f matrix, float x0, float y0, float x1, float y1, int color) {
+        submitFill(matrix, x0, y0, x1, y1, color, color);
+    }
+
+    public void submitFill(Matrix3x2f matrix, float x0, float y0, float x1, float y1, int color0, int color1) {
+        submitFill(matrix, x0, y0, x1, y1, color0, color0, color1, color1);
+    }
+
+    public void submitFill(Matrix3x2f matrix, float x0, float y0, float x1, float y1, int color00, int color01, int color10, int color11) {
+        addDraw(new SubmitFill(matrix, RenderPipelines.GUI, TextureSetup.noTexture(), x0, y0, x1, y1, color00, color01, color10, color11));
     }
 
     public void submitText(Matrix3x2f matrix, String text, float x, float y, int color) {
@@ -59,7 +72,7 @@ public class GuiSubmitter implements AutoCloseable {
     }
 
     public void submitText(Matrix3x2f matrix, String text, float x, float y, int color, boolean shadow) {
-        addDraw(new Text(new Matrix3x2f(matrix), text, x, y, color, shadow));
+        addDraw(new SubmitText(new Matrix3x2f(matrix), text, x, y, color, shadow));
     }
 
     public void submitCenteredText(Matrix3x2f matrix, String text, float x, float y, int color) {
@@ -134,61 +147,5 @@ public class GuiSubmitter implements AutoCloseable {
 
     public interface Draw {
         void draw(GuiGraphicsExtractor graphics);
-    }
-
-    public record Fill(Matrix3x2f matrix,
-                       RenderPipeline pipeline,
-                       TextureSetup texture,
-                       float x0,
-                       float y0,
-                       float x1,
-                       float y1,
-                       float u0,
-                       float u1,
-                       float v0,
-                       float v1,
-                       int color0,
-                       int color1) implements Draw {
-        @Override
-        public void draw(GuiGraphicsExtractor graphics) {
-            graphics.guiRenderState.addGuiElement(new FloatBlitRenderState(
-                    pipeline,
-                    texture,
-                    matrix,
-                    x0,
-                    y0,
-                    x1,
-                    y1,
-                    u0,
-                    u1,
-                    v0,
-                    v1,
-                    color0,
-                    color1,
-                    graphics.scissorStack.peek()));
-        }
-    }
-
-    public record Text(Matrix3x2f matrix,
-                       String text,
-                       float x,
-                       float y,
-                       int color,
-                       boolean shadow) implements Draw {
-
-        @Override
-        public void draw(GuiGraphicsExtractor graphics) {
-            graphics.pose().pushMatrix();
-            matrix.translate(x, y);
-            graphics.pose().set(matrix);
-            graphics.text(
-                    Minecraft.getInstance().font,
-                    text,
-                    0,
-                    0,
-                    color,
-                    shadow);
-            graphics.pose().popMatrix();
-        }
     }
 }

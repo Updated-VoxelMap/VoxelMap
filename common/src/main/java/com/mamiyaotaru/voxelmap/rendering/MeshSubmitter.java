@@ -20,7 +20,7 @@ import net.minecraft.util.LightCoordsUtil;
 import org.joml.Matrix4f;
 import org.joml.Vector4fc;
 
-public class SubmitPass implements AutoCloseable {
+public class MeshSubmitter implements AutoCloseable {
     private static final PoseStack POSE_CACHE = new PoseStack();
     private final GpuTextureView colorTexture;
     private final Optional<Vector4fc> colorClear;
@@ -32,7 +32,7 @@ public class SubmitPass implements AutoCloseable {
     private int submitOrder;
     private RenderType currentRenderType;
 
-    public SubmitPass(String passName, GpuTextureView colorTexture, Optional<Vector4fc> colorClear, GpuTextureView depthTexture, OptionalDouble depthClear) {
+    public MeshSubmitter(String passName, GpuTextureView colorTexture, Optional<Vector4fc> colorClear, GpuTextureView depthTexture, OptionalDouble depthClear) {
         RenderSystem.assertOnRenderThread();
 
         CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
@@ -88,7 +88,7 @@ public class SubmitPass implements AutoCloseable {
 
     public void submitBlit(Matrix4f matrix, float x, float y, float z, float width, float height, int color) {
         float v0 = RenderUtils.hasFlippedV() ? 1.0F : 0.0F;
-        float v1 = RenderUtils.hasFlippedV() ? 0.0F : 1.0F;
+        float v1 = 1.0F - v0;
         submitQuad(matrix, x, y, z, width, height, 0.0F, 1.0F, v0, v1, color);
     }
 

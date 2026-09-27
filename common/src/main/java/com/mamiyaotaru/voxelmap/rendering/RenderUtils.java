@@ -127,8 +127,8 @@ public class RenderUtils {
     }
 
 
-    public static SubmitPass createSubmitPass(String name, RenderTarget target, Vector4fc colorClear, double depthClear) {
-        return new SubmitPass(name, target.getColorTextureView(), Optional.of(colorClear), target.getDepthTextureView(), OptionalDouble.of(depthClear));
+    public static MeshSubmitter createMeshSubmitter(String name, RenderTarget target, Vector4fc colorClear, double depthClear) {
+        return new MeshSubmitter(name, target.getColorTextureView(), Optional.of(colorClear), target.getDepthTextureView(), OptionalDouble.of(depthClear));
     }
 
     public static RenderPass createRenderPass(String name, RenderTarget target, Vector4fc colorClear, double depthClear) {

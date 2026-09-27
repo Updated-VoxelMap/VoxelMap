@@ -1,16 +1,16 @@
 package com.mamiyaotaru.voxelmap.rendering;
 
+import com.mamiyaotaru.voxelmap.textures.Sprite;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import java.util.Arrays;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
 import org.joml.Matrix3x2f;
 
-public class OrderedGuiSubmitter implements AutoCloseable {
+public class GuiSubmitter implements AutoCloseable {
     private static final int INITIAL_CAPACITY = 2;
 
     private final String passName;
@@ -19,41 +19,55 @@ public class OrderedGuiSubmitter implements AutoCloseable {
     private int order = 0;
     private DrawGroup[] drawGroups = new DrawGroup[INITIAL_CAPACITY];
 
-    public OrderedGuiSubmitter(String passName, GuiGraphicsExtractor graphics) {
+    public GuiSubmitter(String passName, GuiGraphicsExtractor graphics) {
         this.passName = passName;
         this.graphics = graphics;
     }
 
-    public void blit(RenderPipeline pipeline, Identifier texture, float x, float y, float w, float h, int color) {
-        blit(pipeline, Minecraft.getInstance().getTextureManager().getTexture(texture), x, y, w, h, color);
+    public void submitSprite(Matrix3x2f matrix, RenderPipeline pipeline, Sprite sprite, float x, float y, float w, float h, int color) {
+        submitQuad(matrix, pipeline, sprite.getIdentifier(), x, y, w, h, sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV(), color);
     }
 
-    public void blit(RenderPipeline pipeline, AbstractTexture texture, float x, float y, float w, float h, int color) {
-        blit(pipeline, texture, x, y, w, h, 0.0F, 1.0F, 0.0F, 1.0F, color);
+    public void submitBlit(Matrix3x2f matrix, RenderPipeline pipeline, Identifier texture, float x, float y, float w, float h, int color) {
+        submitBlit(matrix, pipeline, Minecraft.getInstance().getTextureManager().getTexture(texture), x, y, w, h, color);
     }
 
-    public void blit(RenderPipeline pipeline, Identifier identifier, float x, float y, float w, float h, float u0, float u1, float v0, float v1, int color) {
-        blit(pipeline, Minecraft.getInstance().getTextureManager().getTexture(identifier), x, y, w, h, u0, u1, v0, v1, color);
+    public void submitBlit(Matrix3x2f matrix, RenderPipeline pipeline, AbstractTexture texture, float x, float y, float w, float h, int color) {
+        float v0 = RenderUtils.hasFlippedV() ? 1.0F : 0.0F;
+        float v1 = 1.0F - v0;
+        submitQuad(matrix, pipeline, texture, x, y, w, h, 0.0F, 1.0F, v0, v1, color);
     }
 
-    public void blit(RenderPipeline pipeline, AbstractTexture texture, float x, float y, float w, float h, float u0, float u1, float v0, float v1, int color) {
-        addDraw(new Fill(new Matrix3x2f(graphics.pose()), pipeline, TextureSetup.singleTexture(texture.getTextureView(), texture.getSampler()), x, y, x + w, y + h, u0, u1, v0, v1, color, color));
+    public void submitQuad(Matrix3x2f matrix, RenderPipeline pipeline, Identifier texture, float x, float y, float w, float h, int color) {
+        submitQuad(matrix, pipeline, Minecraft.getInstance().getTextureManager().getTexture(texture), x, y, w, h, color);
     }
 
-    public void text(Font font, String text, float x, float y, int color) {
-        text(font, text, x, y, color, true);
+    public void submitQuad(Matrix3x2f matrix, RenderPipeline pipeline, AbstractTexture texture, float x, float y, float w, float h, int color) {
+        submitQuad(matrix, pipeline, texture, x, y, w, h, 0.0F, 1.0F, 0.0F, 1.0F, color);
     }
 
-    public void text(Font font, String text, float x, float y, int color, boolean shadow) {
-        addDraw(new Text(new Matrix3x2f(graphics.pose()), font, text, x, y, color, false, shadow));
+    public void submitQuad(Matrix3x2f matrix, RenderPipeline pipeline, Identifier identifier, float x, float y, float w, float h, float u0, float u1, float v0, float v1, int color) {
+        submitQuad(matrix, pipeline, Minecraft.getInstance().getTextureManager().getTexture(identifier), x, y, w, h, u0, u1, v0, v1, color);
     }
 
-    public void centeredText(Font font, String text, float x, float y, int color) {
-        centeredText(font, text, x, y, color, true);
+    public void submitQuad(Matrix3x2f matrix, RenderPipeline pipeline, AbstractTexture texture, float x, float y, float w, float h, float u0, float u1, float v0, float v1, int color) {
+        addDraw(new Fill(new Matrix3x2f(matrix), pipeline, TextureSetup.singleTexture(texture.getTextureView(), texture.getSampler()), x, y, x + w, y + h, u0, u1, v0, v1, color, color));
     }
 
-    public void centeredText(Font font, String text, float x, float y, int color, boolean shadow) {
-        addDraw(new Text(new Matrix3x2f(graphics.pose()), font, text, x, y, color, true, shadow));
+    public void submitText(Matrix3x2f matrix, String text, float x, float y, int color) {
+        submitText(matrix, text, x, y, color, true);
+    }
+
+    public void submitText(Matrix3x2f matrix, String text, float x, float y, int color, boolean shadow) {
+        addDraw(new Text(new Matrix3x2f(matrix), text, x, y, color, shadow));
+    }
+
+    public void submitCenteredText(Matrix3x2f matrix, String text, float x, float y, int color) {
+        submitCenteredText(matrix, text, x, y, color, true);
+    }
+
+    public void submitCenteredText(Matrix3x2f matrix, String text, float x, float y, int color, boolean shadow) {
+        submitText(matrix, text, x - Minecraft.getInstance().font.width(text) / 2.0F, y, color, shadow);
     }
 
     public void nextOrder() {
@@ -84,17 +98,17 @@ public class OrderedGuiSubmitter implements AutoCloseable {
         group.addDraw(draw);
     }
 
-    public void submitAll() {
+    public void flush() {
         for (DrawGroup group : drawGroups) {
             if (group != null) {
-                group.submit(graphics);
+                group.draw(graphics);
             }
         }
     }
 
     @Override
     public void close() {
-        submitAll();
+        flush();
     }
 
     private static class DrawGroup {
@@ -108,15 +122,18 @@ public class OrderedGuiSubmitter implements AutoCloseable {
             draws[len++] = draw;
         }
 
-        public void submit(GuiGraphicsExtractor graphics) {
+        public void draw(GuiGraphicsExtractor graphics) {
+            graphics.pose().pushMatrix();
+            graphics.pose().identity();
             for (int i = 0; i < len; i++) {
-                draws[i].submit(graphics);
+                draws[i].draw(graphics);
             }
+            graphics.pose().popMatrix();
         }
     }
 
     public interface Draw {
-        void submit(GuiGraphicsExtractor graphics);
+        void draw(GuiGraphicsExtractor graphics);
     }
 
     public record Fill(Matrix3x2f matrix,
@@ -133,7 +150,7 @@ public class OrderedGuiSubmitter implements AutoCloseable {
                        int color0,
                        int color1) implements Draw {
         @Override
-        public void submit(GuiGraphicsExtractor graphics) {
+        public void draw(GuiGraphicsExtractor graphics) {
             graphics.guiRenderState.addGuiElement(new FloatBlitRenderState(
                     pipeline,
                     texture,
@@ -153,23 +170,21 @@ public class OrderedGuiSubmitter implements AutoCloseable {
     }
 
     public record Text(Matrix3x2f matrix,
-                       Font font,
                        String text,
                        float x,
                        float y,
                        int color,
-                       boolean center,
                        boolean shadow) implements Draw {
 
         @Override
-        public void submit(GuiGraphicsExtractor graphics) {
+        public void draw(GuiGraphicsExtractor graphics) {
             graphics.pose().pushMatrix();
             matrix.translate(x, y);
             graphics.pose().set(matrix);
             graphics.text(
-                    font,
+                    Minecraft.getInstance().font,
                     text,
-                    center ? font.width(text) / 2 : 0,
+                    0,
                     0,
                     color,
                     shadow);

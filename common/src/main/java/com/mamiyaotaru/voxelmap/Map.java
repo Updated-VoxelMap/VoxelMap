@@ -48,7 +48,6 @@ import net.minecraft.client.gui.screens.OutOfMemoryScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.texture.TextureContents;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
@@ -196,11 +195,11 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
 
             this.mapImagesFiltered[i] = new DynamicMutableTexture(String.format("voxelmap-map-%s", resolution), resolution, resolution, true);
             this.mapImagesFiltered[i].setSampler(RenderUtils.getSampler(true, false));
-            minecraft.getTextureManager().register(resourceMapImageFiltered[i], this.mapImagesFiltered[i]);
+            this.mapImagesFiltered[i].register(resourceMapImageFiltered[i]);
 
             this.mapImagesUnfiltered[i] = new ScaledDynamicMutableTexture(String.format("voxelmap-map-unfiltered-%s", resolution), resolution, resolution, true);
             this.mapImagesUnfiltered[i].setSampler(RenderUtils.getSampler(true, false));
-            minecraft.getTextureManager().register(resourceMapImageUnfiltered[i], this.mapImagesUnfiltered[i]);
+            this.mapImagesUnfiltered[i].register(resourceMapImageUnfiltered[i]);
 
         }
 
@@ -240,7 +239,6 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
 
     private void loadMapTextures() {
         ResourceManager resourceManager = minecraft.getResourceManager();
-        TextureManager textureManager = minecraft.getTextureManager();
 
         try {
             boolean arrowFiltering = Boolean.parseBoolean(VoxelConstants.getVoxelMapInstance().getImageProperties().getProperty("minimapArrowFiltering", "true"));
@@ -257,9 +255,9 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
             squareMapTexture.setSampler(frameSampler);
             roundMapTexture.setSampler(frameSampler);
 
-            textureManager.register(resourceArrow, arrowTexture);
-            textureManager.register(resourceSquareMapFrame, squareMapTexture);
-            textureManager.register(resourceRoundMapFrame, roundMapTexture);
+            arrowTexture.register(resourceArrow);
+            squareMapTexture.register(resourceSquareMapFrame);
+            roundMapTexture.register(resourceRoundMapFrame);
 
         } catch (Exception exception) {
             VoxelConstants.getLogger().error("Failed getting map images " + exception.getLocalizedMessage(), exception);
@@ -551,7 +549,7 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
                     this.needLightmapRefresh = true;
                 }
 
-                boolean aboveHorizon = VoxelConstants.getPlayer().getEyePosition(0.0F).y >= this.world.getLevelData().getHorizonHeight(this.world);
+                boolean aboveHorizon = VoxelConstants.getPlayer().getEyePosition(0.0F).y >= (this.world.getLevelData().isFlat ? this.world.getMinY() : 63.0);
                 if (this.worldIsEther) {
                     aboveHorizon = true;
                 }

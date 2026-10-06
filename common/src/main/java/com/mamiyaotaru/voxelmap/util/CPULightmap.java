@@ -2,7 +2,6 @@ package com.mamiyaotaru.voxelmap.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ARGB;
-import net.minecraft.util.Mth;
 
 /**
  * from lightmap.fsh + net.minecraft.client.renderer.LightTexture
@@ -79,9 +78,9 @@ public class CPULightmap {
         colorG = mix(colorG, 0.75F, 0.04F);
         colorB = mix(colorB, 0.75F, 0.04F);
 
-        colorR = Mth.clamp(colorR, 0.0F, 1.0F);
-        colorG = Mth.clamp(colorG, 0.0F, 1.0F);
-        colorB = Mth.clamp(colorB, 0.0F, 1.0F);
+        colorR = Math.clamp(colorR, 0.0F, 1.0F);
+        colorG = Math.clamp(colorG, 0.0F, 1.0F);
+        colorB = Math.clamp(colorB, 0.0F, 1.0F);
 
         colorR = mix(colorR, notGamma(colorR), brightnessFactor);
         colorG = mix(colorG, notGamma(colorG), brightnessFactor);

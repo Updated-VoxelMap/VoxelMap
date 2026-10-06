@@ -38,20 +38,20 @@ public class GuiDataMigration extends GuiScreenMinimap {
         int buttonY = this.getHeight() / 2;
 
         int offset = 0;
-        this.addRenderableWidget(new Button.Builder(Component.translatable("voxelmap.migration.option.copy"), button -> this.onChoice.accept(Choice.COPY))
+        this.addRenderableWidget(Button.builder(Component.translatable("voxelmap.migration.option.copy"), button -> this.onChoice.accept(Choice.COPY))
                 .bounds(centerX - 155, buttonY + offset, 310, 20).build());
         offset += 24;
 
         if (this.showKeepLegacy) {
-            this.addRenderableWidget(new Button.Builder(Component.translatable("voxelmap.migration.option.keepLegacy"), button -> this.onChoice.accept(Choice.KEEP_LEGACY))
+            this.addRenderableWidget(Button.builder(Component.translatable("voxelmap.migration.option.keepLegacy"), button -> this.onChoice.accept(Choice.KEEP_LEGACY))
                     .bounds(centerX - 155, buttonY + offset, 310, 20).build());
             offset += 24;
         }
 
-        this.addRenderableWidget(new Button.Builder(Component.translatable("voxelmap.migration.option.delete"), button -> this.confirmDelete())
+        this.addRenderableWidget(Button.builder(Component.translatable("voxelmap.migration.option.delete"), button -> this.confirmDelete())
                 .bounds(centerX - 155, buttonY + offset, 310, 20).build());
 
-        this.addRenderableWidget(new Button.Builder(Component.translatable("gui.cancel"), button -> this.onClose())
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> this.onClose())
                 .bounds(centerX - 100, this.getHeight() - 30, 200, 20).build());
     }
 

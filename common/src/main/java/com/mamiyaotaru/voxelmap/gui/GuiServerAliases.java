@@ -30,7 +30,7 @@ public class GuiServerAliases extends GuiScreenMinimap {
             this.field.setMaxLength(256);
             this.field.setValue(value);
             this.field.setResponder(text -> onRowEdited(this));
-            this.delete = new Button.Builder(Component.literal("✕"), button -> deleteRow(this)).bounds(0, 0, DELETE_WIDTH, 20).build();
+            this.delete = Button.builder(Component.literal("✕"), button -> deleteRow(this)).bounds(0, 0, DELETE_WIDTH, 20).build();
         }
     }
 
@@ -90,9 +90,9 @@ public class GuiServerAliases extends GuiScreenMinimap {
             addRow("");
         }
 
-        this.addRenderableWidget(new Button.Builder(Component.translatable("gui.done"), button -> this.save())
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> this.save())
                 .bounds(centerX - 155, this.getHeight() - 27, 150, 20).build());
-        this.addRenderableWidget(new Button.Builder(Component.translatable("gui.cancel"), button -> this.onClose())
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> this.onClose())
                 .bounds(centerX + 5, this.getHeight() - 27, 150, 20).build());
 
         if (focusedAlias >= 0) {
@@ -150,9 +150,9 @@ public class GuiServerAliases extends GuiScreenMinimap {
             int visIndex = i - this.scrollRow;
             boolean visible = visIndex >= 0 && visIndex < this.visibleRows;
 
-            row.field.visible = visible;
+            row.field.setVisible(visible);
             row.field.active = visible;
-            row.delete.visible = visible;
+            row.delete.setVisible(visible);
             row.delete.active = visible;
 
             if (visible) {

@@ -55,7 +55,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.ARGB;
-import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.FoliageColor;
 import net.minecraft.world.level.GrassColor;
@@ -217,11 +216,11 @@ public class ColorManager implements IReloadListener {
         try {
             ConfiguredDynamicTexture hueWheelTexture = new ConfiguredDynamicTexture(() -> "Hue Color Wheel", TextureContents.load(Minecraft.getInstance().getResourceManager(), this.hueColorWheel).image());
             hueWheelTexture.setSampler(RenderUtils.getSampler(true, false));
-            VoxelConstants.getMinecraft().getTextureManager().register(this.hueColorWheel, hueWheelTexture);
+            hueWheelTexture.register(this.hueColorWheel);
 
             ConfiguredDynamicTexture hueSatWheelTexture = new ConfiguredDynamicTexture(() -> "Hue Saturation Color Wheel", TextureContents.load(Minecraft.getInstance().getResourceManager(), this.hueSatColorWheel).image());
             hueSatWheelTexture.setSampler(RenderUtils.getSampler(true, false));
-            VoxelConstants.getMinecraft().getTextureManager().register(this.hueSatColorWheel, hueSatWheelTexture);
+            hueSatWheelTexture.register(this.hueSatColorWheel);
 
         } catch (Exception exception) {
         }
@@ -235,7 +234,7 @@ public class ColorManager implements IReloadListener {
     }
 
     private void loadTexturePackTerrainImage() {
-        RenderUtils.readTextureContentsToBufferedImage(VoxelConstants.getMinecraft().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getTexture(), image -> {
+        RenderUtils.readTextureContentsToBufferedImage(VoxelConstants.getMinecraft().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).textureView().texture(), image -> {
             terrainBuff = image;
             loadedTerrainImage = true;
             if (loaded) {
@@ -1240,8 +1239,8 @@ public class ColorManager implements IReloadListener {
                     if (grid) {
                         tintMult = tintColorsBuff.getRGB(t, Math.max(0, s * heightMultiplier - yOffset)) & 16777215;
                     } else {
-                        double var1 = Mth.clamp(biome.getBaseTemperature(), 0.0F, 1.0F);
-                        double var2 = Mth.clamp(MultiLoaderManager.getModApiBridge().getBiomeClimateSettings(biome).downfall(), 0.0F, 1.0F);
+                        double var1 = Math.clamp(biome.getBaseTemperature(), 0.0F, 1.0F);
+                        double var2 = Math.clamp(MultiLoaderManager.getModApiBridge().getBiomeClimateSettings(biome).downfall(), 0.0F, 1.0F);
 
                         var2 *= var1;
                         var1 = 1.0 - var1;

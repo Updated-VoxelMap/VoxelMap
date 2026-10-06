@@ -1,6 +1,7 @@
 package com.mamiyaotaru.voxelmap.persistent;
 
 import com.mamiyaotaru.voxelmap.VoxelConstants;
+import com.mamiyaotaru.voxelmap.textures.VoxelMapTexture;
 import com.mamiyaotaru.voxelmap.util.ColorUtils;
 import com.mamiyaotaru.voxelmap.util.CompressionUtils;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -14,15 +15,13 @@ import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import java.util.UUID;
 import java.util.zip.DataFormatException;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MipmapGenerator;
 import net.minecraft.client.renderer.texture.MipmapStrategy;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.Level;
 import org.lwjgl.system.MemoryUtil;
 
-public class CompressibleMapRegionTexture extends AbstractTexture {
+public class CompressibleMapRegionTexture extends VoxelMapTexture {
     private final static int MIP_LEVELS = 7;
 
     private NativeImage pixels;
@@ -53,10 +52,9 @@ public class CompressibleMapRegionTexture extends AbstractTexture {
     }
 
     public Identifier getTextureLocation(float zoom) {
-        if (zoom < 2) {
-            this.sampler = samplerSmall;
-        } else {
-            this.sampler = samplerLarge;
+        GpuSampler wanted = zoom < 2 ? samplerSmall : samplerLarge;
+        if (this.sampler != wanted) {
+            this.setSampler(wanted);
         }
         return texture != null ? this.location : null;
     }
@@ -67,7 +65,7 @@ public class CompressibleMapRegionTexture extends AbstractTexture {
             return;
         }
         if (texture != null) {
-            Minecraft.getInstance().getTextureManager().release(location);
+            this.unregister();
         }
         close();
     }
@@ -87,14 +85,14 @@ public class CompressibleMapRegionTexture extends AbstractTexture {
             this.texture = gpuDevice.createTexture("compressibleMapRegionTexture", GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING, GpuFormat.RGBA8_UNORM, this.pixels.getWidth(), this.pixels.getHeight(), 1, MIP_LEVELS + 1);
             this.textureView = gpuDevice.createTextureView(this.texture, 0, MIP_LEVELS + 1);
 
-            Minecraft.getInstance().getTextureManager().register(location, this);
+            this.register(location);
         }
 
         if (pixelsMipmapped == null) {
-            RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, this.pixels, 0, 0, 0, 0);
+            this.pixels.writeToGpuTexture(RenderSystem.getDevice().createCommandEncoder(), this.texture, 0, 0, 0, 0);
         } else {
             for (int i = 0; i < pixelsMipmapped.length; i++) {
-                RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, this.pixelsMipmapped[i], i, 0, 0, 0);
+                this.pixelsMipmapped[i].writeToGpuTexture(RenderSystem.getDevice().createCommandEncoder(), this.texture, i, 0, 0, 0);
             }
         }
 

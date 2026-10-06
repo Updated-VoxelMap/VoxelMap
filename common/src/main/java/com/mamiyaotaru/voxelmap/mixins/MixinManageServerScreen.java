@@ -27,7 +27,7 @@ public abstract class MixinManageServerScreen extends Screen {
         int buttonWidth = 120;
         int x = this.width - buttonWidth - 8;
         int y = this.height - 28;
-        this.addRenderableWidget(new Button.Builder(Component.translatable("voxelmap.alias.editButton"),
+        this.addRenderableWidget(Button.builder(Component.translatable("voxelmap.alias.editButton"),
                 button -> this.minecraft.gui.setScreen(new GuiServerAliases(this, this.serverData.ip)))
                 .bounds(x, y, buttonWidth, 20).build());
     }

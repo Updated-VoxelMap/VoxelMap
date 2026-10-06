@@ -6,9 +6,9 @@ import com.mamiyaotaru.voxelmap.rendering.VoxelMapRenderTarget;
 import com.mamiyaotaru.voxelmap.util.ImageUtils;
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.systems.ScissorState;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -16,7 +16,7 @@ import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.util.ScissorState;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.util.Locale;
@@ -25,7 +25,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.StagedVertexBuffer;
-import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.TextureHandle;
 import net.minecraft.util.ARGB;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -155,10 +155,10 @@ public class EntityMeshRenderer {
         }
         isBatching = false;
 
-        AbstractTexture texture0 = variant.tex0() == null ? null : minecraft.getTextureManager().getTexture(variant.tex0());
-        AbstractTexture texture1 = variant.tex1() == null ? null : minecraft.getTextureManager().getTexture(variant.tex1());
-        AbstractTexture texture2 = variant.tex2() == null ? null : minecraft.getTextureManager().getTexture(variant.tex2());
-        AbstractTexture texture3 = variant.tex3() == null ? null : minecraft.getTextureManager().getTexture(variant.tex3());
+        TextureHandle texture0 = variant.tex0() == null ? null : minecraft.getTextureManager().getTexture(variant.tex0());
+        TextureHandle texture1 = variant.tex1() == null ? null : minecraft.getTextureManager().getTexture(variant.tex1());
+        TextureHandle texture2 = variant.tex2() == null ? null : minecraft.getTextureManager().getTexture(variant.tex2());
+        TextureHandle texture3 = variant.tex3() == null ? null : minecraft.getTextureManager().getTexture(variant.tex3());
 
         RenderUtils.setupProjectionMatrix(projection.getBuffer(512.0F, 512.0F), ProjectionType.ORTHOGRAPHIC);
         RenderSystem.setShaderLights(lightingBuffer.slice());
@@ -182,22 +182,22 @@ public class EntityMeshRenderer {
                 renderPass.setIndexBuffer(meshInfo.indexBuffer(), meshInfo.indexType());
                 if (texture0 != null) {
                     renderPass.setUniform("DynamicTransforms", uniforms0);
-                    renderPass.setUniform("Sampler0", texture0.getTextureView(), texture0.getSampler());
+                    renderPass.setUniform("Sampler0", texture0.textureView(), texture0.sampler());
                     renderPass.drawIndexed(meshInfo.indexCount(), 1, meshInfo.firstIndex(), meshInfo.baseVertex(), 0);
                 }
                 if (texture1 != null) {
                     renderPass.setUniform("DynamicTransforms", uniforms1);
-                    renderPass.setUniform("Sampler0", texture1.getTextureView(), texture1.getSampler());
+                    renderPass.setUniform("Sampler0", texture1.textureView(), texture1.sampler());
                     renderPass.drawIndexed(meshInfo.indexCount(), 1, meshInfo.firstIndex(), meshInfo.baseVertex(), 0);
                 }
                 if (texture2 != null) {
                     renderPass.setUniform("DynamicTransforms", uniforms2);
-                    renderPass.setUniform("Sampler0", texture2.getTextureView(), texture2.getSampler());
+                    renderPass.setUniform("Sampler0", texture2.textureView(), texture2.sampler());
                     renderPass.drawIndexed(meshInfo.indexCount(), 1, meshInfo.firstIndex(), meshInfo.baseVertex(), 0);
                 }
                 if (texture3 != null) {
                     renderPass.setUniform("DynamicTransforms", uniforms3);
-                    renderPass.setUniform("Sampler0", texture3.getTextureView(), texture3.getSampler());
+                    renderPass.setUniform("Sampler0", texture3.textureView(), texture3.sampler());
                     renderPass.drawIndexed(meshInfo.indexCount(), 1, meshInfo.firstIndex(), meshInfo.baseVertex(), 0);
                 }
             }

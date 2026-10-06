@@ -124,7 +124,7 @@ public class GuiColorPickerSimple extends AbstractColorPicker {
             // calculate v
             double dy = getValueSliderY() - mouseY;
 
-            v = (float) Mth.clamp((dy + wheelRadius) / (wheelRadius * 2.0), 0.0, 1.0);
+            v = (float) Math.clamp((dy + wheelRadius) / (wheelRadius * 2.0), 0.0, 1.0);
         }
 
         if (pickingHueSat) {
@@ -134,8 +134,8 @@ public class GuiColorPickerSimple extends AbstractColorPicker {
             double degrees = Math.toDegrees(Math.atan2(dy, dx)) + 180.0F;
             double distance = Math.sqrt(dx * dx + dy * dy);
 
-            h = (float) Mth.clamp((degrees / 360.0F), 0.0, 1.0);
-            s = (float) Mth.clamp((distance / wheelRadius), 0.0, 1.0);
+            h = (float) Math.clamp((degrees / 360.0F), 0.0, 1.0);
+            s = (float) Math.clamp((distance / wheelRadius), 0.0, 1.0);
         }
 
         updateColor(Color.getHSBColor(h, s, v).getRGB());

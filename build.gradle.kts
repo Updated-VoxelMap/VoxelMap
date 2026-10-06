@@ -6,15 +6,15 @@ plugins {
     id("com.gradleup.shadow") version ("9.6.1") apply (false)
 }
 
-val minecraftVersion by extra { "26.3" }
+val minecraftVersion by extra { "26.4-snapshot-3" }
 val forgeVersion by extra { "66.0.3" }
 val neoForgeVersion by extra { "26.3.0.16-beta" }
 val fabricVersion by extra { "0.19.5" }
-val fabricApiVersion by extra { "0.161.0+26.3" }
+val fabricApiVersion by extra { "0.162.2+26.4" }
 val modMenuVersion by extra { "21.0.0" }
 val paperApiVersion by extra { "[26.3.build,)" }
 val voxelConfigVersion by extra { "1.0.2" }
-val geckolibVersion by extra { "5.5.7" }
+val geckolibVersion by extra { "26.3:5.5.7" }
 val voxelMapVersion by extra { "1.16.13" }
 
 val fullVersion by extra { "${minecraftVersion}-${voxelMapVersion}" }
@@ -36,7 +36,11 @@ subprojects {
     apply(plugin = "maven-publish")
 
     repositories {
-        mavenLocal()
+        mavenLocal {
+            content {
+                excludeGroup("com.mojang")
+            }
+        }
         mavenCentral()
         maven {
             name = "papermc"

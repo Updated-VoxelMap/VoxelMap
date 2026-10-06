@@ -45,9 +45,9 @@ public class GuiMobs extends GuiScreenMinimap {
         addRenderableWidget(mobsList);
         addRenderableWidget(filter);
         setFocused(filter);
-        addRenderableWidget(buttonEnable = new Button.Builder(Component.translatable("options.minimap.mobs.enable"), button -> setMobEnabled(selectedMobId, true)).bounds(getWidth() / 2 - 154, getHeight() - 26, 100, 20).build());
-        addRenderableWidget(buttonDisable = new Button.Builder(Component.translatable("options.minimap.mobs.disable"), button -> setMobEnabled(selectedMobId, false)).bounds(getWidth() / 2 - 50, getHeight() - 26, 100, 20).build());
-        addRenderableWidget(new Button.Builder(Component.translatable("gui.done"), button -> onClose()).bounds(getWidth() / 2 + 4 + 50, getHeight() - 26, 100, 20).build());
+        addRenderableWidget(buttonEnable = Button.builder(Component.translatable("options.minimap.mobs.enable"), button -> setMobEnabled(selectedMobId, true)).bounds(getWidth() / 2 - 154, getHeight() - 26, 100, 20).build());
+        addRenderableWidget(buttonDisable = Button.builder(Component.translatable("options.minimap.mobs.disable"), button -> setMobEnabled(selectedMobId, false)).bounds(getWidth() / 2 - 50, getHeight() - 26, 100, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> onClose()).bounds(getWidth() / 2 + 4 + 50, getHeight() - 26, 100, 20).build());
 
         boolean isSomethingSelected = selectedMobId != null;
         buttonEnable.active = isSomethingSelected;

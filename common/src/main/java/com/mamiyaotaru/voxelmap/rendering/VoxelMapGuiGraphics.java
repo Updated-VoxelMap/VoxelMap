@@ -1,7 +1,7 @@
 package com.mamiyaotaru.voxelmap.rendering;
 
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.textures.AddressMode;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.mojang.renderpearl.api.textures.GpuSampler;
@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.TextureHandle;
 import net.minecraft.resources.Identifier;
 import org.joml.Matrix3x2f;
 
@@ -23,11 +23,11 @@ public class VoxelMapGuiGraphics {
                 minu, maxu, minv, maxv, color, color2, graphics.scissorStack.peek()));
     }
 
-    public static void blitFloatGradient(GuiGraphicsExtractor graphics, RenderPipeline pipeline, AbstractTexture texture, float x, float y, float w, float h, float minu, float maxu, float minv, float maxv, int color, int color2) {
-        blitFloatGradient(graphics, pipeline, texture.getTextureView(), texture.getSampler(), x, y, w, h, minu, maxu, minv, maxv, color, color2);
+    public static void blitFloatGradient(GuiGraphicsExtractor graphics, RenderPipeline pipeline, TextureHandle texture, float x, float y, float w, float h, float minu, float maxu, float minv, float maxv, int color, int color2) {
+        blitFloatGradient(graphics, pipeline, texture.textureView(), texture.sampler(), x, y, w, h, minu, maxu, minv, maxv, color, color2);
     }
 
-    public static void blitFloat(GuiGraphicsExtractor graphics, RenderPipeline pipeline, AbstractTexture texture, float x, float y, float w, float h, float minu, float maxu, float minv, float maxv, int color) {
+    public static void blitFloat(GuiGraphicsExtractor graphics, RenderPipeline pipeline, TextureHandle texture, float x, float y, float w, float h, float minu, float maxu, float minv, float maxv, int color) {
         blitFloatGradient(graphics, pipeline, texture, x, y, w, h, minu, maxu, minv, maxv, color, color);
     }
 

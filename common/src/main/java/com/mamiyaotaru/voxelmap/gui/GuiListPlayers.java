@@ -43,7 +43,7 @@ public class GuiListPlayers extends AbstractSelectionList<GuiListPlayers.Row> {
         players = new ArrayList<>(connection.getOnlinePlayers());
         sort();
 
-        Button everyoneButton = new Button.Builder(EVERYONE, button -> {}).bounds(parentGui.getWidth() / 2 - 75, 0, 150, 20).build();
+        Button everyoneButton = Button.builder(EVERYONE, button -> {}).bounds(parentGui.getWidth() / 2 - 75, 0, 150, 20).build();
         everyoneButton.setTooltip(Tooltip.create(Component.translatable("minimap.waypointShare.shareWithName", EVERYONE)));
         everyoneRow = new Row(everyoneButton, -1, null, -1);
 
@@ -59,7 +59,7 @@ public class GuiListPlayers extends AbstractSelectionList<GuiListPlayers.Row> {
             return null;
         } else {
             Component name = getPlayerName(ScoreboardEntry);
-            Button btn = new Button.Builder(name, button -> {}).bounds(x, y, 150, 20).build();
+            Button btn = Button.builder(name, button -> {}).bounds(x, y, 150, 20).build();
             btn.setTooltip(Tooltip.create(Component.translatable("minimap.waypointShare.shareWithName", name)));
             return btn;
         }

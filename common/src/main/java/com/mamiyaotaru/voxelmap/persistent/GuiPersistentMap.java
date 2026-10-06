@@ -102,6 +102,7 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
     private float mouseDirectToMap = 1.0F;
     private float guiToDirectMouse = 2.0F;
     private static boolean gotSkin;
+    private static boolean requestingSkin;
     private boolean closed;
     private CachedRegion[] regions = new CachedRegion[0];
     BackgroundImageInfo backGroundImageInfo;
@@ -152,15 +153,32 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
     }
 
     private void getSkin() {
-        BufferedImage skinImage = ImageUtils.createBufferedImageFromIdentifier(VoxelConstants.getPlayer().getSkin().body().texturePath());
+        Identifier skinLocation = VoxelConstants.getPlayer().getSkin().body().texturePath();
+        BufferedImage skinImage = ImageUtils.createBufferedImageFromIdentifier(skinLocation);
 
-        if (skinImage == null) {
-            if (VoxelConstants.DEBUG) {
-                VoxelConstants.getLogger().warn("Got no player skin!");
-            }
+        if (skinImage != null) {
+            this.createSkinTexture(skinImage);
             return;
         }
 
+        if (requestingSkin) {
+            return;
+        }
+
+        requestingSkin = true;
+        RenderUtils.readTextureContentsToBufferedImage(minecraft.getTextureManager().getTexture(skinLocation).textureView().texture(), image -> {
+            requestingSkin = false;
+            if (image == null) {
+                if (VoxelConstants.DEBUG) {
+                    VoxelConstants.getLogger().warn("Got no player skin!");
+                }
+                return;
+            }
+            this.createSkinTexture(image);
+        });
+    }
+
+    private void createSkinTexture(BufferedImage skinImage) {
         gotSkin = true;
 
         boolean showHat = VoxelConstants.getPlayer().isModelPartShown(PlayerModelPart.HAT);
@@ -175,7 +193,7 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
 
         ConfiguredDynamicTexture texture = new ConfiguredDynamicTexture(() -> "Voxelmap player", ImageUtils.nativeImageFromBufferedImage(skinImage));
         texture.setSampler(RenderUtils.getSampler(true, false));
-        minecraft.getTextureManager().register(voxelmapSkinLocation, texture);
+        texture.register(voxelmapSkinLocation);
     }
 
     @Override

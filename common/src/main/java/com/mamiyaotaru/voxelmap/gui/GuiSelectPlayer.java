@@ -64,7 +64,7 @@ public class GuiSelectPlayer extends GuiScreenMinimap implements BooleanConsumer
         EditBox fieldToFocus = messageFocused ? message : filter;
         setFocused(fieldToFocus);
         fieldToFocus.setFocused(true);
-        addRenderableWidget(new Button.Builder(Component.translatable("gui.cancel"), button -> onClose()).bounds(getWidth() / 2 - 100, getHeight() - 28, 200, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> onClose()).bounds(getWidth() / 2 - 100, getHeight() - 28, 200, 20).build());
     }
 
     private void filterUpdated(String string) {

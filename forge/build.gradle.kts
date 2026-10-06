@@ -44,7 +44,7 @@ dependencies {
     compileOnly(project.project(":server-common").sourceSets.main.get().output)
 
     shade("de.voxelmap:voxelconfig:${voxelConfigVersion}")
-    compileOnly("com.geckolib:geckolib-common-${minecraftVersion}:${geckolibVersion}")
+    compileOnly("com.geckolib:geckolib-common-${geckolibVersion}")
 }
 
 minecraft {

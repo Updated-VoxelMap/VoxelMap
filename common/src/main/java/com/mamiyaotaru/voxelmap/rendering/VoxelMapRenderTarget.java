@@ -9,8 +9,6 @@ import com.mojang.renderpearl.api.textures.AddressMode;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.mojang.renderpearl.api.textures.GpuSampler;
 import java.util.UUID;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
 
 public class VoxelMapRenderTarget extends RenderTarget {
@@ -27,7 +25,7 @@ public class VoxelMapRenderTarget extends RenderTarget {
         return textureId;
     }
 
-    public AbstractTexture getTexture() {
+    public AllocatedTexture getTexture() {
         return texture;
     }
 
@@ -36,15 +34,15 @@ public class VoxelMapRenderTarget extends RenderTarget {
         super.createBuffers(width, height);
         texture = new AllocatedTexture(colorTexture, colorTextureView);
         texture.setSampler(DEFAULT_SAMPLER);
-        Minecraft.getInstance().getTextureManager().register(textureId, texture);
+        texture.register(textureId);
     }
 
     @Override
     public void destroyBuffers() {
         super.destroyBuffers();
         if (texture != null) {
+            texture.unregister();
             texture = null;
-            Minecraft.getInstance().getTextureManager().release(textureId);
         }
     }
 }

@@ -33,8 +33,8 @@ public class GuiListKeys extends AbstractSelectionList<GuiListKeys.RowItem> {
         for (int i = 0; i < this.options.keyBindings.length; ++i) {
             int ii = i;
             this.rowItems.add(new RowItem(this.parentGui,
-                    new Button.Builder(Component.empty(), button -> this.keyForEdit = this.options.keyBindings[ii]).bounds(0, 0, 75, 20).build(),
-                    new Button.Builder(Component.translatable("controls.reset"), button -> this.resetKeyMapping(ii)).bounds(0, 0, 50, 20).build(),
+                    Button.builder(Component.empty(), button -> this.keyForEdit = this.options.keyBindings[ii]).bounds(0, 0, 75, 20).build(),
+                    Button.builder(Component.translatable("controls.reset"), button -> this.resetKeyMapping(ii)).bounds(0, 0, 50, 20).build(),
                     this.options.keyBindings[i]));
         }
         this.rowItems.sort(Comparator.comparing(entry -> entry.keyMapping));

@@ -9,6 +9,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.fish.TropicalFish;
+import net.minecraft.world.level.material.MapColor;
 
 public class TropicalFishVariantDataFactory extends EntityVariantDataFactory {
     private static final EnumMap<TropicalFish.Pattern, Identifier> PATTERN_TEXTURES = Maps.newEnumMap(
@@ -36,9 +37,9 @@ public class TropicalFishVariantDataFactory extends EntityVariantDataFactory {
     @Override
     public EntityVariantData create(Entity entity, EntityRenderer renderer, EntityRenderState state, String id, boolean addBorder) {
         Identifier tex0 = loadBaseTexture(renderer, state);
-        int col0 = ((TropicalFish) entity).getBaseColor().getMapColor().col | 0xFF000000;
+        int col0 = MapColor.DYE_TO_DEFAULT_COLOR.pick(((TropicalFish) entity).getBaseColor()).col | 0xFF000000;
         Identifier tex1 = PATTERN_TEXTURES.get(((TropicalFish) entity).getPattern());
-        int col1 = ((TropicalFish) entity).getPatternColor().getMapColor().col | 0xFF000000;
+        int col1 = MapColor.DYE_TO_DEFAULT_COLOR.pick(((TropicalFish) entity).getPatternColor()).col | 0xFF000000;
         return new EntityVariantData(type(), id, tex0, col0, tex1, col1, addBorder);
     }
 }

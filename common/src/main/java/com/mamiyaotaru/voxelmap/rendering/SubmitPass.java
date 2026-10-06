@@ -134,12 +134,22 @@ public class SubmitPass implements AutoCloseable {
     }
 
     public void flush() {
-        try (
-            FeatureRenderDispatcher.PreparedFrame frame = Minecraft.getInstance().gameRenderer.featureRenderDispatcher().prepareFrame(submitNodeStorage);
-            RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "VoxelMap SubmitPass Draw", colorTexture, colorClear, depthTexture, depthClear)
-        ) {
-            RenderSystem.bindDefaultUniforms(pass);
-            FeatureRenderDispatcher.renderAllFeatures(pass, frame);
+        try (FeatureRenderDispatcher.PreparedFrame frame = Minecraft.getInstance().gameRenderer.featureRenderDispatcher().prepareFrame(submitNodeStorage)) {
+            CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+            try (RenderPass pass = encoder.createRenderPass(() -> "VoxelMap SubmitPass Draw", colorTexture, colorClear, depthTexture, depthClear)) {
+                RenderSystem.bindDefaultUniforms(pass);
+                frame.executeSolid(pass);
+                frame.executeTranslucent(pass);
+                frame.executeTranslucentAfterTerrain(pass);
+                frame.executeAlwaysOnTop(pass);
+            }
+
+            if (frame.hasAnySeeThrough()) {
+                try (RenderPass pass = encoder.createRenderPass(() -> "VoxelMap SubmitPass See Through", colorTexture, Optional.empty())) {
+                    RenderSystem.bindDefaultUniforms(pass);
+                    frame.executeSeeThrough(pass);
+                }
+            }
         }
 
         submitOrder = 0;

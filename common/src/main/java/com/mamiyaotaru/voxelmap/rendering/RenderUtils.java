@@ -197,7 +197,8 @@ public class RenderUtils {
         int bufferSize = bytePerPixel * width * height;
         GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(() -> "Texture read buffer", GpuBuffer.USAGE_MAP_READ | GpuBuffer.USAGE_COPY_DST, bufferSize);
         CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
-        commandEncoder.copyTextureToBuffer(gpuTexture, gpuBuffer, 0, () -> {
+        commandEncoder.copyTextureToBuffer(gpuTexture, gpuBuffer, 0L, 0);
+        RenderSystem.queueFencedTask(() -> {
             BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
             try (GpuBufferSlice.MappedView readView = gpuBuffer.map(true, false)) {
                 for (int y = 0; y < height; y++) {
@@ -209,7 +210,7 @@ public class RenderUtils {
             }
             gpuBuffer.close();
             resultConsumer.accept(image);
-        }, 0);
+        });
     }
 
     public static record ProjectionEntry(GpuBufferSlice matrix, ProjectionType type) {

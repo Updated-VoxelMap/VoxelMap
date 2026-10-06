@@ -129,17 +129,17 @@ public class MapSettingsManager implements ISettingsManager {
                     String[] curLine = sCurrentLine.split(":");
                     switch (curLine[0]) {
                         case "Welcome Message" -> welcome = Boolean.parseBoolean(curLine[1]);
-                        case "Zoom Level" -> zoom = Mth.clamp(Integer.parseInt(curLine[1]), 0, 4);
+                        case "Zoom Level" -> zoom = Math.clamp(Integer.parseInt(curLine[1]), 0, 4);
                         case "Old North" -> oldNorth = Boolean.parseBoolean(curLine[1]);
-                        case "Color Picker Mode" -> colorPickerMode = Mth.clamp(Integer.parseInt(curLine[1]), 0, 1);
+                        case "Color Picker Mode" -> colorPickerMode = Math.clamp(Integer.parseInt(curLine[1]), 0, 1);
                         case "Real Time Torch Flicker" -> realTimeTorches = Boolean.parseBoolean(curLine[1]);
 
                         case "Hide Minimap" -> hide = Boolean.parseBoolean(curLine[1]);
                         case "Update Notifier" -> updateNotifier = Boolean.parseBoolean(curLine[1]);
                         case "Display Biome" -> showBiome = Boolean.parseBoolean(curLine[1]);
-                        case "Display Coordinates" -> coordsMode = Mth.clamp(Integer.parseInt(curLine[1]), 0, 2);
-                        case "Map Corner" -> mapCorner = Mth.clamp(Integer.parseInt(curLine[1]), 0, 3);
-                        case "Map Size" -> sizeModifier = Mth.clamp(Integer.parseInt(curLine[1]), -1, 4);
+                        case "Display Coordinates" -> coordsMode = Math.clamp(Integer.parseInt(curLine[1]), 0, 2);
+                        case "Map Corner" -> mapCorner = Math.clamp(Integer.parseInt(curLine[1]), 0, 3);
+                        case "Map Size" -> sizeModifier = Math.clamp(Integer.parseInt(curLine[1]), -1, 4);
                         case "Square Map" -> squareMap = Boolean.parseBoolean(curLine[1]);
                         case "Rotation" -> rotates = Boolean.parseBoolean(curLine[1]);
                         case "Waypoint Beacons" -> showWaypointBeacons = Boolean.parseBoolean(curLine[1]);
@@ -154,19 +154,19 @@ public class MapSettingsManager implements ISettingsManager {
                         case "Water Transparency" -> waterTransparency = Boolean.parseBoolean(curLine[1]);
                         case "Block Transparency" -> blockTransparency = Boolean.parseBoolean(curLine[1]);
                         case "Biomes" -> biomes = Boolean.parseBoolean(curLine[1]);
-                        case "Biome Overlay" -> biomeOverlay = Mth.clamp(Integer.parseInt(curLine[1]), 0, 2);
+                        case "Biome Overlay" -> biomeOverlay = Math.clamp(Integer.parseInt(curLine[1]), 0, 2);
                         case "Chunk Grid" -> chunkGrid = Boolean.parseBoolean(curLine[1]);
                         case "Slime Chunks" -> slimeChunks = Boolean.parseBoolean(curLine[1]);
                         case "World Border" -> worldBorder = Boolean.parseBoolean(curLine[1]);
                         case "Filtering" -> filtering = Boolean.parseBoolean(curLine[1]);
                         case "Teleport Command" -> teleportCommand = curLine[1];
 
-                        case "Waypoint Sort By" -> waypointSort = Mth.clamp(Integer.parseInt(curLine[1]), 1, 4);
-                        case "Waypoint Max Distance" -> maxWaypointDisplayDistance = Mth.clamp(Integer.parseInt(curLine[1]), -1, 10000);
-                        case "Waypoint Sign Scale" -> waypointSignScale = Mth.clamp(Float.parseFloat(curLine[1]), 0.5F, 1.5F);
-                        case "Deathpoints" -> deathpoints = Mth.clamp(Integer.parseInt(curLine[1]), 0, 2);
-                        case "Waypoint Distance Unit Conversion" -> waypointDistanceConversion = Mth.clamp(Integer.parseInt(curLine[1]), 0, 2);
-                        case "Waypoint Sign Layout" -> waypointSignLayout = Mth.clamp(Integer.parseInt(curLine[1]), 0, 3);
+                        case "Waypoint Sort By" -> waypointSort = Math.clamp(Integer.parseInt(curLine[1]), 1, 4);
+                        case "Waypoint Max Distance" -> maxWaypointDisplayDistance = Math.clamp(Integer.parseInt(curLine[1]), -1, 10000);
+                        case "Waypoint Sign Scale" -> waypointSignScale = Math.clamp(Float.parseFloat(curLine[1]), 0.5F, 1.5F);
+                        case "Deathpoints" -> deathpoints = Math.clamp(Integer.parseInt(curLine[1]), 0, 2);
+                        case "Waypoint Distance Unit Conversion" -> waypointDistanceConversion = Math.clamp(Integer.parseInt(curLine[1]), 0, 2);
+                        case "Waypoint Sign Layout" -> waypointSignLayout = Math.clamp(Integer.parseInt(curLine[1]), 0, 3);
                         case "Highlight Sign on Focus" -> highlightSignOnFocus = Boolean.parseBoolean(curLine[1]);
 
                         case "Zoom Key" -> bindKey(keyBindZoom, curLine[1]);

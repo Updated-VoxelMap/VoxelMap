@@ -6,7 +6,6 @@ import com.mamiyaotaru.voxelmap.util.ImageUtils;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.GpuFormat;
-import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -21,12 +20,11 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureContents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 
-public class TextureAtlas extends AbstractTexture implements VoxelMapTexture {
+public class TextureAtlas extends VoxelMapTexture {
     private final HashMap<Object, Sprite> mapRegisteredSprites;
     private final HashMap<Object, Sprite> mapUploadedSprites;
     private final String basePath;
@@ -48,12 +46,7 @@ public class TextureAtlas extends AbstractTexture implements VoxelMapTexture {
         this.basePath = basePath;
         this.iconCreator = iconCreator;
         this.Identifier = Identifier;
-        Minecraft.getInstance().getTextureManager().register(Identifier, this);
-    }
-
-    @Override
-    public void setSampler(GpuSampler sampler) {
-        this.sampler = sampler;
+        this.register(Identifier);
     }
 
     private void initMissingImage() {
@@ -103,6 +96,7 @@ public class TextureAtlas extends AbstractTexture implements VoxelMapTexture {
 
         texture = RenderSystem.getDevice().createTexture("voxelmap-atlas", GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_TEXTURE_BINDING, GpuFormat.RGBA8_UNORM, this.stitcher.getCurrentImageWidth(), this.stitcher.getCurrentImageHeight(), 1, 1);
         textureView = RenderSystem.getDevice().createTextureView(texture);
+        this.publish();
         // super.setFilter(linearFilter, mipmap);
         HashMap<Object, Sprite> tempMapRegisteredSprites = Maps.newHashMap(this.mapRegisteredSprites);
         for (Sprite icon : this.stitcher.getStitchSlots()) {
@@ -152,13 +146,10 @@ public class TextureAtlas extends AbstractTexture implements VoxelMapTexture {
         this.stitcher.doStitchNew();
 
         if (texture == null || oldWidth != this.stitcher.getCurrentImageWidth() || oldHeight != this.stitcher.getCurrentImageHeight()) {
-            if (texture != null) {
-                texture.close();
-                texture = null;
-            }
             VoxelConstants.getLogger().info("Resized to: {}x{} {}-atlas", new Object[] { this.stitcher.getCurrentImageWidth(), this.stitcher.getCurrentImageHeight(), this.basePath });
             texture = RenderSystem.getDevice().createTexture("voxelmap-atlas", GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_TEXTURE_BINDING, GpuFormat.RGBA8_UNORM, this.stitcher.getCurrentImageWidth(), this.stitcher.getCurrentImageHeight(), 1, 1);
             textureView = RenderSystem.getDevice().createTextureView(texture);
+            this.publish();
             // super.setFilter(linearFilter, mipmap);
         }
 
@@ -205,7 +196,7 @@ public class TextureAtlas extends AbstractTexture implements VoxelMapTexture {
     private void uploadSprite(Sprite icon) {
         NativeImage uploadImage = this.createPaddedSpriteImage(icon);
         try {
-            RenderSystem.getDevice().createCommandEncoder().writeToTexture(texture, uploadImage, 0, 0, icon.getAtlasOriginX(), icon.getAtlasOriginY());
+            uploadImage.writeToGpuTexture(RenderSystem.getDevice().createCommandEncoder(), texture, 0, 0, icon.getAtlasOriginX(), icon.getAtlasOriginY());
         } finally {
             uploadImage.close();
         }

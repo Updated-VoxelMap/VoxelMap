@@ -17,13 +17,12 @@ import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Optional;
 import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.ReloadableTexture;
 import net.minecraft.client.renderer.texture.TextureContents;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.Resource;
 import org.lwjgl.system.MemoryUtil;
 
 public class ImageUtils {
@@ -56,21 +55,20 @@ public class ImageUtils {
 
     public static BufferedImage createBufferedImageFromIdentifier(Identifier Identifier) {
         try {
-            AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(Identifier);
-            BufferedImage image = null;
-            if (texture instanceof DynamicTexture dynamicTexture) {
-                image = bufferedImageFromNativeImage(dynamicTexture.getPixels());
-            } else if (texture instanceof ReloadableTexture) {
-                InputStream is = VoxelConstants.getMinecraft().getResourceManager().getResource(Identifier).get().open();
+            Optional<Resource> resource = VoxelConstants.getMinecraft().getResourceManager().getResource(Identifier);
+            if (resource.isEmpty()) {
+                return null;
+            }
+            BufferedImage image;
+            try (InputStream is = resource.get().open()) {
                 image = ImageIO.read(is);
-                is.close();
-                if (image.getType() != BufferedImage.TYPE_4BYTE_ABGR) {
-                    BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
-                    Graphics2D g2 = temp.createGraphics();
-                    g2.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
-                    g2.dispose();
-                    image = temp;
-                }
+            }
+            if (image.getType() != BufferedImage.TYPE_4BYTE_ABGR) {
+                BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+                Graphics2D g2 = temp.createGraphics();
+                g2.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
+                g2.dispose();
+                image = temp;
             }
             return image;
         } catch (Exception var5) {

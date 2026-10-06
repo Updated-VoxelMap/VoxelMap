@@ -55,7 +55,7 @@ public class GuiSubworldsSelect extends GuiScreenMinimap implements BooleanConsu
 
         int buttonWidth = this.width / buttonsPerRow - 5;
         int xSpacing = (this.width - buttonsPerRow * buttonWidth) / 2;
-        Button cancelBtn = new Button.Builder(Component.translatable("gui.cancel"), button -> VoxelConstants.getMinecraft().gui.setScreen(null)).bounds(centerX - 100, this.height - 30, 200, 20).build();
+        Button cancelBtn = Button.builder(Component.translatable("gui.cancel"), button -> VoxelConstants.getMinecraft().gui.setScreen(null)).bounds(centerX - 100, this.height - 30, 200, 20).build();
         this.addRenderableWidget(cancelBtn);
         knownSubworldNames.sort((name1, name2) -> -String.CASE_INSENSITIVE_ORDER.compare(name1, name2));
         int numKnownSubworlds = knownSubworldNames.size();
@@ -74,8 +74,8 @@ public class GuiSubworldsSelect extends GuiScreenMinimap implements BooleanConsu
             this.worlds[t] = knownSubworldNames.get(t);
             int tt = t;
             int i = (buttonsPerRow - shiftBy - t % buttonsPerRow) * buttonWidth;
-            selectButtons[t] = new Button.Builder(Component.literal(this.worlds[t]), button -> this.worldSelected(this.worlds[tt])).bounds(i + xSpacing, this.height - 60 - t / buttonsPerRow * 21, buttonWidth - 32, 20).build();
-            editButtons[t] = new Button.Builder(Component.literal("⚒"), button -> this.editWorld(this.worlds[tt])).bounds(i + xSpacing + buttonWidth - 32, this.height - 60 - t / buttonsPerRow * 21, 30, 20).build();
+            selectButtons[t] = Button.builder(Component.literal(this.worlds[t]), button -> this.worldSelected(this.worlds[tt])).bounds(i + xSpacing, this.height - 60 - t / buttonsPerRow * 21, buttonWidth - 32, 20).build();
+            editButtons[t] = Button.builder(Component.literal("⚒"), button -> this.editWorld(this.worlds[tt])).bounds(i + xSpacing + buttonWidth - 32, this.height - 60 - t / buttonsPerRow * 21, 30, 20).build();
             this.addRenderableWidget(selectButtons[t]);
             this.addRenderableWidget(editButtons[t]);
         }
@@ -86,7 +86,7 @@ public class GuiSubworldsSelect extends GuiScreenMinimap implements BooleanConsu
         this.newNameField = new EditBox(this.getFont(), i + xSpacing + 1, this.height - 60 - numButtons / buttonsPerRow * 21 + 1, buttonWidth - 4, 18, Component.empty());
         this.newNameField.setValue(previousNewName);
         if (!this.newWorld) {
-            this.newNameButton = new Button.Builder(Component.literal("< " + I18n.get("worldmap.multiworld.newName") + " >"), button -> this.showNewNameField()).bounds(i + xSpacing, this.height - 60 - numButtons / buttonsPerRow * 21, buttonWidth - 2, 20).build();
+            this.newNameButton = Button.builder(Component.literal("< " + I18n.get("worldmap.multiworld.newName") + " >"), button -> this.showNewNameField()).bounds(i + xSpacing, this.height - 60 - numButtons / buttonsPerRow * 21, buttonWidth - 2, 20).build();
             this.addRenderableWidget(this.newNameButton);
         } else {
             this.addRenderableWidget(this.newNameField);

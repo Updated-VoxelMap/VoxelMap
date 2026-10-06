@@ -65,10 +65,10 @@ public class GuiWaypoints extends GuiScreenMinimap implements IGuiWaypoints {
         waypointList = new GuiListWaypoints(this);
 
         addRenderableWidget(waypointList);
-        addRenderableWidget(buttonSortName = new Button.Builder(Component.translatable("minimap.waypoints.sortByName"), button -> sortClicked(2)).bounds(getWidth() / 2 - 154, 34, 77, 20).build());
-        addRenderableWidget(buttonSortDistance = new Button.Builder(Component.translatable("minimap.waypoints.sortByDistance"), button -> sortClicked(3)).bounds(getWidth() / 2 - 77, 34, 77, 20).build());
-        addRenderableWidget(buttonSortCreated = new Button.Builder(Component.translatable("minimap.waypoints.sortByCreated"), button -> sortClicked(1)).bounds(getWidth() / 2, 34, 77, 20).build());
-        addRenderableWidget(buttonSortColor = new Button.Builder(Component.translatable("minimap.waypoints.sortByColor"), button -> sortClicked(4)).bounds(getWidth() / 2 + 77, 34, 77, 20).build());
+        addRenderableWidget(buttonSortName = Button.builder(Component.translatable("minimap.waypoints.sortByName"), button -> sortClicked(2)).bounds(getWidth() / 2 - 154, 34, 77, 20).build());
+        addRenderableWidget(buttonSortDistance = Button.builder(Component.translatable("minimap.waypoints.sortByDistance"), button -> sortClicked(3)).bounds(getWidth() / 2 - 77, 34, 77, 20).build());
+        addRenderableWidget(buttonSortCreated = Button.builder(Component.translatable("minimap.waypoints.sortByCreated"), button -> sortClicked(1)).bounds(getWidth() / 2, 34, 77, 20).build());
+        addRenderableWidget(buttonSortColor = Button.builder(Component.translatable("minimap.waypoints.sortByColor"), button -> sortClicked(4)).bounds(getWidth() / 2 + 77, 34, 77, 20).build());
 
         int filterStringWidth = getFont().width(I18n.get("minimap.waypoints.filter") + ":");
         filter = new EditBox(getFont(), getWidth() / 2 - 153 + filterStringWidth + 5, getHeight() - 78, 305 - filterStringWidth - 5, 20, Component.empty());
@@ -78,14 +78,14 @@ public class GuiWaypoints extends GuiScreenMinimap implements IGuiWaypoints {
 
         addRenderableWidget(filter);
         setFocused(filter);
-        addRenderableWidget(new Button.Builder(Component.translatable("minimap.waypoints.add"), button -> addWaypoint()).bounds(getWidth() / 2 - 154, getHeight() - 50, 74, 20).build());
-        addRenderableWidget(buttonEdit = new Button.Builder(Component.translatable("selectServer.edit"), button -> editWaypoint(selectedWaypoint)).bounds(getWidth() / 2 - 76, getHeight() - 50, 74, 20).build());
-        addRenderableWidget(buttonDelete = new Button.Builder(Component.translatable("selectServer.delete"), button -> deleteClicked()).bounds(getWidth() / 2 + 2, getHeight() - 50, 74, 20).build());
-        addRenderableWidget(buttonHighlight = new Button.Builder(Component.translatable("minimap.waypoints.highlight"), button -> setHighlightedWaypoint()).bounds(getWidth() / 2 + 80, getHeight() - 50, 74, 20).build());
-        addRenderableWidget(buttonTeleport = new Button.Builder(Component.translatable("minimap.waypoints.teleportTo"), button -> teleportClicked()).bounds(getWidth() / 2 - 154, getHeight() - 26, 74, 20).build());
-        addRenderableWidget(buttonShare = new Button.Builder(Component.translatable("minimap.waypoints.share"), button -> CommandUtils.sendWaypoint(selectedWaypoint)).bounds(getWidth() / 2 - 76, getHeight() - 26, 74, 20).build());
-        addRenderableWidget(new Button.Builder(Component.translatable("menu.options"), button -> VoxelConstants.getMinecraft().gui.setScreen(new GuiMinimapOptions(this, "waypoints"))).bounds(getWidth() / 2 + 2, getHeight() - 26, 74, 20).build());
-        addRenderableWidget(new Button.Builder(Component.translatable("gui.done"), button -> onClose()).bounds(getWidth() / 2 + 80, getHeight() - 26, 74, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("minimap.waypoints.add"), button -> addWaypoint()).bounds(getWidth() / 2 - 154, getHeight() - 50, 74, 20).build());
+        addRenderableWidget(buttonEdit = Button.builder(Component.translatable("selectServer.edit"), button -> editWaypoint(selectedWaypoint)).bounds(getWidth() / 2 - 76, getHeight() - 50, 74, 20).build());
+        addRenderableWidget(buttonDelete = Button.builder(Component.translatable("selectServer.delete"), button -> deleteClicked()).bounds(getWidth() / 2 + 2, getHeight() - 50, 74, 20).build());
+        addRenderableWidget(buttonHighlight = Button.builder(Component.translatable("minimap.waypoints.highlight"), button -> setHighlightedWaypoint()).bounds(getWidth() / 2 + 80, getHeight() - 50, 74, 20).build());
+        addRenderableWidget(buttonTeleport = Button.builder(Component.translatable("minimap.waypoints.teleportTo"), button -> teleportClicked()).bounds(getWidth() / 2 - 154, getHeight() - 26, 74, 20).build());
+        addRenderableWidget(buttonShare = Button.builder(Component.translatable("minimap.waypoints.share"), button -> CommandUtils.sendWaypoint(selectedWaypoint)).bounds(getWidth() / 2 - 76, getHeight() - 26, 74, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("menu.options"), button -> VoxelConstants.getMinecraft().gui.setScreen(new GuiMinimapOptions(this, "waypoints"))).bounds(getWidth() / 2 + 2, getHeight() - 26, 74, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> onClose()).bounds(getWidth() / 2 + 80, getHeight() - 26, 74, 20).build());
 
         boolean isSomethingSelected = selectedWaypoint != null;
         buttonEdit.active = isSomethingSelected;

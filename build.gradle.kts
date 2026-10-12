@@ -36,7 +36,11 @@ subprojects {
     apply(plugin = "maven-publish")
 
     repositories {
-        mavenLocal()
+        mavenLocal {
+            content {
+                excludeGroup("com.mojang")
+            }
+        }
         mavenCentral()
         maven {
             name = "papermc"
@@ -49,6 +53,14 @@ subprojects {
         maven {
             name = "Brokkonaut"
             url = uri("https://www.iani.de/nexus/content/groups/public/")
+        }
+        maven {
+            name = "Mojang"
+            url = uri("https://libraries.minecraft.net/")
+            metadataSources {
+                mavenPom()
+                ignoreGradleMetadataRedirection()
+            }
         }
         maven { url = uri("https://api.modrinth.com/maven") }
     }

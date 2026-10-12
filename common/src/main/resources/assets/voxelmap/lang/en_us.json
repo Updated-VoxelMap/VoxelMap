@@ -232,6 +232,7 @@
   "options.worldmap.maxZoom": "Max Zoom",
   "options.worldmap.cacheSize": "Regions Cache Size",
   "options.worldmap.multiworld": "Multiworld...",
+  "options.worldmap.export": "Export",
   "worldmap.multiworld.title": "VoxelMap - Multiworld Selection",
   "worldmap.multiworld.isThisMultiworld": "Is this a multiworld server?",
   "worldmap.multiworld.explanation": "Say 'no' if you don't know, you can change your mind later.",

@@ -10,8 +10,10 @@ import com.mamiyaotaru.voxelmap.gui.GuiWaypoints;
 import com.mamiyaotaru.voxelmap.gui.IGuiWaypoints;
 import com.mamiyaotaru.voxelmap.gui.overridden.Popup;
 import com.mamiyaotaru.voxelmap.gui.overridden.PopupGuiButton;
+import com.mamiyaotaru.voxelmap.gui.overridden.PopupGuiIconButton;
 import com.mamiyaotaru.voxelmap.gui.overridden.PopupGuiScreen;
 import com.mamiyaotaru.voxelmap.interfaces.AbstractMapData;
+import net.minecraft.client.gui.components.Tooltip;
 import com.mamiyaotaru.voxelmap.rendering.RenderUtils;
 import com.mamiyaotaru.voxelmap.rendering.VoxelMapGuiGraphics;
 import com.mamiyaotaru.voxelmap.textures.ConfiguredDynamicTexture;
@@ -122,6 +124,11 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
     Waypoint selectedWaypoint;
     Waypoint hoverdWaypoint;
     private PopupGuiButton buttonWaypoints;
+    private PopupGuiButton buttonDone;
+    private PopupGuiIconButton buttonExport;
+    private PopupGuiIconButton buttonOptions;
+    private final Identifier settingsIconResource = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, "images/gui/settings.png");
+    private final Identifier exportIconResource = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, "images/gui/export.png");
     private final Minecraft minecraft = Minecraft.getInstance();
     private final Identifier voxelmapSkinLocation = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, "persistentmap/playerskin");
     private final Identifier crosshairResource = Identifier.parse("textures/gui/sprites/hud/crosshair.png");
@@ -192,19 +199,52 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
         this.buildWorldName();
         this.leftMouseButtonDown = false;
         this.sideMargin = 10;
-        this.buttonCount = 5;
         this.buttonSeparation = 4;
-        this.buttonWidth = (this.width - this.sideMargin * 2 - this.buttonSeparation * (this.buttonCount - 1)) / this.buttonCount;
-        this.buttonWaypoints = new PopupGuiButton(this.sideMargin, this.getHeight() - 26, this.buttonWidth, 20, Component.translatable("options.minimap.waypoints"), button -> minecraft.gui.setScreen(new GuiWaypoints(this)), this);
-        this.addRenderableWidget(this.buttonWaypoints);
+        int iconButtonSize = 20;
+        int buttonY = this.getHeight() - 26;
+
         this.multiworldButtonName = Component.translatable(VoxelConstants.isRealmServer() ? "menu.online" : "options.worldmap.multiworld");
         this.multiworldButtonNameRed = (Component.translatable(VoxelConstants.isRealmServer() ? "menu.online" : "options.worldmap.multiworld")).withStyle(ChatFormatting.RED);
+
+        int minTextWidth = Math.max(
+                this.getFont().width(Component.translatable("options.minimap.waypoints")),
+                Math.max(
+                        this.getFont().width(this.multiworldButtonName),
+                        this.getFont().width(Component.translatable("gui.done"))
+                )
+        ) + 16;
+        int maxAllowedWidth = Math.max(50, (this.width / 2 - this.sideMargin - this.buttonSeparation * 2) * 2 / 5);
+        this.buttonWidth = Math.min(Math.max(72, minTextWidth), maxAllowedWidth);
+
+        // 1. Waypoints (links)
+        this.buttonWaypoints = new PopupGuiButton(this.sideMargin, buttonY, this.buttonWidth, 20, Component.translatable("options.minimap.waypoints"), button -> minecraft.gui.setScreen(new GuiWaypoints(this)), this);
+        this.addRenderableWidget(this.buttonWaypoints);
+
+        // 2. Multiworld (rechts neben Waypoints)
+        this.buttonMultiworld = null;
         if (!minecraft.hasSingleplayerServer() && !VoxelConstants.getVoxelMapInstance().getWaypointManager().receivedAutoSubworldName()) {
-            this.addRenderableWidget(this.buttonMultiworld = new PopupGuiButton(this.sideMargin + (this.buttonWidth + this.buttonSeparation), this.getHeight() - 26, this.buttonWidth, 20, this.multiworldButtonName, button -> minecraft.gui.setScreen(new GuiSubworldsSelect(this)), this));
+            this.buttonMultiworld = new PopupGuiButton(this.sideMargin + this.buttonWidth + this.buttonSeparation, buttonY, this.buttonWidth, 20, this.multiworldButtonName, button -> minecraft.gui.setScreen(new GuiSubworldsSelect(this)), this);
+            this.addRenderableWidget(this.buttonMultiworld);
         }
 
-        this.addRenderableWidget(new PopupGuiButton(this.sideMargin + 3 * (this.buttonWidth + this.buttonSeparation), this.getHeight() - 26, this.buttonWidth, 20, Component.translatable("menu.options"), button -> minecraft.gui.setScreen(new GuiMinimapOptions(this, "general")), this));
-        this.addRenderableWidget(new PopupGuiButton(this.sideMargin + 4 * (this.buttonWidth + this.buttonSeparation), this.getHeight() - 26, this.buttonWidth, 20, Component.translatable("gui.done"), button -> this.onClose(), this));
+        // 3. Done (in der Mitte, mit Abstand zu Multiworld)
+        int doneX = (this.width - this.buttonWidth) / 2;
+        this.buttonDone = new PopupGuiButton(doneX, buttonY, this.buttonWidth, 20, Component.translatable("gui.done"), button -> this.onClose(), this);
+        this.addRenderableWidget(this.buttonDone);
+
+        // 4. Export (quadratisch, links neben Settings)
+        int exportX = this.width - this.sideMargin - iconButtonSize * 2 - this.buttonSeparation;
+        this.buttonExport = new PopupGuiIconButton(exportX, buttonY, iconButtonSize, iconButtonSize, button -> this.exportMap(), this);
+        this.buttonExport.setIcon(this.exportIconResource, 16, 16);
+        this.buttonExport.setTooltip(Tooltip.create(Component.translatableWithFallback("options.worldmap.export", "Export")));
+        this.addRenderableWidget(this.buttonExport);
+
+        // 5. Settings / Zahnrad (quadratisch, ganz rechts)
+        int settingsX = this.width - this.sideMargin - iconButtonSize;
+        this.buttonOptions = new PopupGuiIconButton(settingsX, buttonY, iconButtonSize, iconButtonSize, button -> minecraft.gui.setScreen(new GuiMinimapOptions(this, "general")), this);
+        this.buttonOptions.setIcon(this.settingsIconResource, 16, 16);
+        this.buttonOptions.setTooltip(Tooltip.create(Component.translatable("menu.options")));
+        this.addRenderableWidget(this.buttonOptions);
         this.coordinates = new EditBox(this.getFont(), this.sideMargin, 10, 140, 20, Component.empty());
         this.coordinates.setValue(coordinateValue);
         if (this.editingCoordinates) {
@@ -1211,6 +1251,10 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
         }
 
         minecraft.gui.setScreen(this);
+    }
+
+    private void exportMap() {
+        // TODO: Implement map export
     }
 
     private int textWidth(String string) {

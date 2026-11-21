@@ -9,6 +9,7 @@ val minecraftVersion: String by rootProject.extra
 val forgeVersion: String by rootProject.extra
 val voxelConfigVersion: String by rootProject.extra
 val geckolibVersion: String by rootProject.extra
+val alexsMobsVersion: String by rootProject.extra
 
 val fullVersion: String by rootProject.extra
 
@@ -45,6 +46,7 @@ dependencies {
 
     shade("de.voxelmap:voxelconfig:${voxelConfigVersion}")
     compileOnly("com.geckolib:geckolib-common-${minecraftVersion}:${geckolibVersion}")
+    compileOnly("maven.modrinth:alexs-mobs-continued:${alexsMobsVersion}")
 }
 
 minecraft {

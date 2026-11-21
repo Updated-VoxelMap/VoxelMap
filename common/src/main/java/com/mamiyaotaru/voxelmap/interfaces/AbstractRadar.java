@@ -3,6 +3,7 @@ package com.mamiyaotaru.voxelmap.interfaces;
 import com.mamiyaotaru.voxelmap.MapSettingsManager;
 import com.mamiyaotaru.voxelmap.RadarSettingsManager;
 import com.mamiyaotaru.voxelmap.VoxelConstants;
+import com.mamiyaotaru.voxelmap.entityrender.compat.AlexsMobsCompat;
 import com.mamiyaotaru.voxelmap.rendering.SubmitPass;
 import com.mamiyaotaru.voxelmap.util.Contact;
 import com.mamiyaotaru.voxelmap.util.MinimapContext;
@@ -141,7 +142,7 @@ public abstract class AbstractRadar implements IReloadListener {
     }
 
     protected boolean isEntityShown(Entity entity) {
-        if (!(entity instanceof LivingEntity) || entity.equals(VoxelConstants.getPlayer())) {
+        if (!(entity instanceof LivingEntity) || entity.equals(VoxelConstants.getPlayer()) || AlexsMobsCompat.isMultipartSegment(entity)) {
             return false;
         }
 

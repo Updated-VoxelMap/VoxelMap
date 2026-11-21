@@ -9,6 +9,7 @@ val fabricVersion: String by rootProject.extra
 val fabricApiVersion: String by rootProject.extra
 val voxelConfigVersion: String by rootProject.extra
 val geckolibVersion: String by rootProject.extra
+val alexsMobsVersion: String by rootProject.extra
 
 repositories {
 
@@ -26,6 +27,7 @@ dependencies {
     // Never present at runtime unless the user has GeckoLib installed, so every
     // access goes through GeckolibCompat.
     compileOnly("com.geckolib:geckolib-common-${minecraftVersion}:${geckolibVersion}")
+    compileOnly("maven.modrinth:alexs-mobs-continued:${alexsMobsVersion}")
 
     compileOnly("net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7")
     testImplementation("com.google.code.gson:gson:2.11.0")

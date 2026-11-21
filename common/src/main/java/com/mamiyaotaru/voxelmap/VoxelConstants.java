@@ -170,7 +170,7 @@ public final class VoxelConstants {
 
     public static int moveScoreboard(int bottomX, int entriesHeight) {
         MapSettingsManager mapSettingsManager = VoxelConstants.getVoxelMapInstance().getMapOptions();
-        double unscaledHeight = Map.getMinTablistOffset(); // / scaleFactor;
+        double unscaledHeight = MapRenderer.getMinTablistOffset(); // / scaleFactor;
         if (mapSettingsManager.hide || !mapSettingsManager.minimapAllowed || mapSettingsManager.mapCorner != 1 || !mapSettingsManager.moveScoreboardBelowMap || !Double.isFinite(unscaledHeight)) {
             return bottomX;
         }
@@ -178,7 +178,7 @@ public final class VoxelConstants {
         double mapHeightScaled = unscaledHeight * 1.37 / scaleFactor; // * 1.37 because unscaledHeight is just the map without the text around it
 
         int fontHeight = Minecraft.getInstance().font.lineHeight; // height of the title line
-        float statusIconOffset = Map.getStatusIconOffset();
+        float statusIconOffset = MapRenderer.getStatusIconOffset();
         int statusIconOffsetInt = Float.isFinite(statusIconOffset) ? (int) statusIconOffset : 0;
         int minBottom = (int) (mapHeightScaled + entriesHeight + fontHeight + statusIconOffsetInt);
 

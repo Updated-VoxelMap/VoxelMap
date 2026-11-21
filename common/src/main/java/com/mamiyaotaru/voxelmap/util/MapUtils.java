@@ -5,6 +5,8 @@ import com.mamiyaotaru.voxelmap.VoxelConstants;
 import java.util.Objects;
 import java.util.Random;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 public class MapUtils {
     private static MapSettingsManager options;
@@ -17,6 +19,19 @@ public class MapUtils {
 
     public static void reset() {
         options = VoxelConstants.getVoxelMapInstance().getMapOptions();
+    }
+
+    public static boolean isUnderground(ClientLevel world, int x, int y, int z) {
+        if (world.dimensionType().hasCeiling() || !world.dimensionType().hasSkyLight()) {
+            return y < world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+        }
+
+        MutableBlockPos blockPos = MutableBlockPosCache.get();
+        blockPos.setXYZ(x, Math.clamp(y, world.getMinY(), world.getMaxY() - 1), z);
+        boolean isCave = world.getBrightness(LightLayer.SKY, blockPos) <= 0;
+        MutableBlockPosCache.release(blockPos);
+
+        return isCave;
     }
 
     public static int doSlimeAndGrid(int color24, ClientLevel world, int mcX, int mcZ) {

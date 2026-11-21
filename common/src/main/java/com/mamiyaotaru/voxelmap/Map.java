@@ -50,53 +50,49 @@ import org.joml.Vector4f;
 
 public class Map implements Runnable, IChangeObserver, IReloadListener {
     private final Minecraft minecraft = Minecraft.getInstance();
+    private final MapRenderer renderer;
     private final MapSettingsManager options;
     private final ColorManager colorManager;
     private final WaypointManager waypointManager;
-    private final MapRenderer renderer;
 
     // Map Data
     private final int mapDataCount = 5;
     private final FullMapData[] mapData = new FullMapData[mapDataCount];
     private final MapChunkCache[] chunkCache = new MapChunkCache[mapDataCount];
-    private DynamicMutableTexture[] mapImages;
-    private Identifier[] mapResources;
+
+    // Map Images
     private final DynamicMutableTexture[] mapImagesFiltered = new DynamicMutableTexture[mapDataCount];
     private final DynamicMutableTexture[] mapImagesUnfiltered = new DynamicMutableTexture[mapDataCount];
-    private final Identifier[] resourceMapImageFiltered = new Identifier[mapDataCount];
-    private final Identifier[] resourceMapImageUnfiltered = new Identifier[mapDataCount];
+    private final Identifier[] mapImagesFilteredUploaded = new Identifier[mapDataCount];
+    private final Identifier[] mapImagesUnfilteredUploaded = new Identifier[mapDataCount];
 
-    // Map Core Calculation
-    private final Object renderLock = new Object();
+    // Updating & Sync
     private Thread zCalc = createZCalcThread();
     private final Object zCalcLock = new Object();
     private int zCalcTicker;
     private volatile boolean zCalcRunning = true;
-
-    private int zoom;
-    private int lastX;
-    private int lastZ;
-    private int lastY;
-
     private final int availableProcessors = Runtime.getRuntime().availableProcessors();
     private final boolean multicore = availableProcessors > 1;
     private final boolean threading = multicore;
-
-
-    private ClientLevel world;
     private int updateTimer;
+    private final Object renderLock = new Object();
+
+    // World & Player
+    private ClientLevel world;
+    private int lastX;
+    private int lastZ;
+    private int lastY;
+    private int zoom;
+    private volatile boolean zoomChanged;
     private volatile boolean doFullRender = true;
 
-    // Map Terrain Calculation
+    // Height Calculation
     private final int heightMapResetHeight = multicore ? 2 : 5;
     private final int heightMapResetTime = multicore ? 300 : 3000;
     private int heightMapFudge;
     private boolean lastCaveRendering;
 
-    // Map Player Calculation
-    private volatile boolean zoomChanged;
-
-    // Map Light Calculation
+    // Light Calculation
     private boolean needLightmapRefresh = true;
     private int tickWithLightChange;
     private final int[] lightmapColors = new int[256];
@@ -113,10 +109,10 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
     private boolean worldIsEther;
 
     public Map() {
+        renderer = new MapRenderer(this);
         options = VoxelConstants.getVoxelMapInstance().getMapOptions();
         colorManager = VoxelConstants.getVoxelMapInstance().getColorManager();
         waypointManager = VoxelConstants.getVoxelMapInstance().getWaypointManager();
-        renderer = new MapRenderer(this);
 
         ArrayList<KeyMapping> tempBindings = new ArrayList<>();
         tempBindings.addAll(Arrays.asList(minecraft.options.keyMappings));
@@ -126,8 +122,8 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
         zCalc.start();
 
         for (int i = 0; i < mapDataCount; i++) {
-            resourceMapImageFiltered[i] = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, String.format("map/filtered/%s", i));
-            resourceMapImageUnfiltered[i] = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, String.format("map/unfiltered/%s", i));
+            mapImagesFilteredUploaded[i] = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, String.format("map/filtered/%s", i));
+            mapImagesUnfilteredUploaded[i] = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, String.format("map/unfiltered/%s", i));
 
             int resolution = 1 << (i + 5); // 32, 64, ...
             int chunks = (1 << (i + 1)) + 1; //3, 5, ...
@@ -137,20 +133,11 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
 
             mapImagesFiltered[i] = new DynamicMutableTexture(String.format("voxelmap-map-%s", resolution), resolution, resolution, true);
             mapImagesFiltered[i].setSampler(RenderUtils.getSampler(true, false));
-            minecraft.getTextureManager().register(resourceMapImageFiltered[i], mapImagesFiltered[i]);
+            minecraft.getTextureManager().register(mapImagesFilteredUploaded[i], mapImagesFiltered[i]);
 
             mapImagesUnfiltered[i] = new ScaledDynamicMutableTexture(String.format("voxelmap-map-unfiltered-%s", resolution), resolution, resolution, true);
             mapImagesUnfiltered[i].setSampler(RenderUtils.getSampler(true, false));
-            minecraft.getTextureManager().register(resourceMapImageUnfiltered[i], mapImagesUnfiltered[i]);
-
-        }
-
-        if (options.filtering) {
-            mapImages = mapImagesFiltered;
-            mapResources = resourceMapImageFiltered;
-        } else {
-            mapImages = mapImagesUnfiltered;
-            mapResources = resourceMapImageUnfiltered;
+            minecraft.getTextureManager().register(mapImagesUnfilteredUploaded[i], mapImagesUnfiltered[i]);
         }
     }
 
@@ -192,16 +179,19 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
         return mapDataCount - 1;
     }
 
-    public FullMapData getMapData() {
-        return mapData[zoom];
+    public FullMapData getMapData(int i) {
+        i = Math.clamp(i, 0, getMaxZoom());
+        return mapData[i];
     }
 
-    public void updateMapImage() {
-        mapImages[zoom].upload();
+    public DynamicMutableTexture getMapImage(int i) {
+        i = Math.clamp(i, 0, getMaxZoom());
+        return options.filtering ? mapImagesFiltered[i] : mapImagesUnfiltered[i];
     }
 
-    public Identifier getMapImage() {
-        return mapResources[zoom];
+    public Identifier getUploadedMapImage(int i) {
+        i = Math.clamp(i, 0, getMaxZoom());
+        return options.filtering ? mapImagesFilteredUploaded[i] : mapImagesUnfilteredUploaded[i];
     }
 
     @Override
@@ -428,20 +418,7 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
     }
 
     private void checkForChanges() {
-        boolean changed = colorManager.checkForChanges();
-
-        if (options.isChanged()) {
-            if (options.filtering) {
-                mapImages = mapImagesFiltered;
-                mapResources = resourceMapImageFiltered;
-            } else {
-                mapImages = mapImagesUnfiltered;
-                mapResources = resourceMapImageUnfiltered;
-            }
-
-            changed = true;
-        }
-
+        boolean changed = colorManager.checkForChanges() || options.isChanged();
         if (changed) {
             doFullRender = true;
             VoxelConstants.getVoxelMapInstance().getSettingsAndLightingChangeNotifier().notifyOfChanges();
@@ -507,8 +484,8 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
         int color24;
         synchronized (renderLock) {
             if (!full) {
-                mapImages[zoom].moveY(offsetZ);
-                mapImages[zoom].moveX(offsetX);
+                getMapImage(zoom).moveY(offsetZ);
+                getMapImage(zoom).moveX(offsetX);
             }
 
             lastX = currentX;
@@ -523,14 +500,14 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
             for (int imageY = offsetZ > 0 ? 32 * multi - 1 : -offsetZ - 1; imageY >= (offsetZ > 0 ? 32 * multi - offsetZ : 0); --imageY) {
                 for (int imageX = 0; imageX < 32 * multi; ++imageX) {
                     color24 = getPixelColor(true, true, true, true, caves, world, zoom, multi, startX, startZ, imageX, imageY);
-                    mapImages[zoom].setRGB(imageX, imageY, color24);
+                    getMapImage(zoom).setRGB(imageX, imageY, color24);
                 }
             }
 
             for (int imageY = 32 * multi - 1; imageY >= 0; --imageY) {
                 for (int imageX = offsetX > 0 ? 32 * multi - offsetX : 0; imageX < (offsetX > 0 ? 32 * multi : -offsetX); ++imageX) {
                     color24 = getPixelColor(true, true, true, true, caves, world, zoom, multi, startX, startZ, imageX, imageY);
-                    mapImages[zoom].setRGB(imageX, imageY, color24);
+                    getMapImage(zoom).setRGB(imageX, imageY, color24);
                 }
             }
         }
@@ -539,7 +516,7 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
             for (int imageY = 32 * multi - 1; imageY >= 0; --imageY) {
                 for (int imageX = 0; imageX < 32 * multi; ++imageX) {
                     color24 = getPixelColor(full, full || needHeightAndID, full, full || needLight || needHeightAndID, caves, world, zoom, multi, startX, startZ, imageX, imageY);
-                    mapImages[zoom].setRGB(imageX, imageY, color24);
+                    getMapImage(zoom).setRGB(imageX, imageY, color24);
                 }
             }
         }
@@ -594,7 +571,7 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
         for (int imageY = bottom; imageY >= top; --imageY) {
             for (int imageX = left; imageX <= right; ++imageX) {
                 color24 = getPixelColor(true, true, true, true, caves, world, zoom, multi, startX, startZ, imageX, imageY);
-                mapImages[zoom].setRGB(imageX, imageY, color24);
+                getMapImage(zoom).setRGB(imageX, imageY, color24);
             }
         }
 
@@ -628,13 +605,7 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
         int color24;
         Biome biome;
         if (needBiome) {
-            // int chunkX = SectionPos.blockToSectionCoord(blockPos.getX());
-            // int chunkZ = SectionPos.blockToSectionCoord(blockPos.getZ());
-            // if (world.getChunk(chunkX, chunkZ, ChunkStatus.FULL, false) != null) { // TODO 1.21.5 testen
             biome = world.getBiome(blockPos).value();
-            // } else {
-            // biome = null;
-            // }
 
             mapData[zoom].setBiome(imageX, imageY, biome);
         } else {
@@ -704,10 +675,8 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
                         foliageBlockState = BlockRepository.air.defaultBlockState();
                     }
 
-                    if (foliageBlockState != null && !(foliageBlockState.getBlock() instanceof AirBlock)) {
+                    if (!(foliageBlockState.getBlock() instanceof AirBlock)) {
                         foliageHeight = surfaceHeight + 1;
-                    } else {
-                        foliageHeight = Short.MIN_VALUE;
                     }
 
                     Block material = surfaceBlockState.getBlock();
@@ -737,14 +706,11 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
                 } else {
                     surfaceHeight = getNetherHeight(startX + imageX, startZ + imageY);
                     surfaceBlockState = world.getBlockState(blockPos.withXYZ(startX + imageX, surfaceHeight - 1, startZ + imageY));
-                    surfaceBlockStateID = BlockRepository.getStateId(surfaceBlockState);
                     foliageHeight = surfaceHeight + 1;
                     blockPos.setXYZ(startX + imageX, foliageHeight - 1, startZ + imageY);
                     foliageBlockState = world.getBlockState(blockPos);
                     Block material = foliageBlockState.getBlock();
-                    if (material != Blocks.SNOW && !(material instanceof AirBlock) && material != Blocks.LAVA && material != Blocks.WATER) {
-                        foliageBlockStateID = BlockRepository.getStateId(foliageBlockState);
-                    } else {
+                    if (material == Blocks.SNOW || material instanceof AirBlock || material == Blocks.LAVA || material == Blocks.WATER) {
                         foliageHeight = Short.MIN_VALUE;
                     }
                 }
@@ -1186,7 +1152,7 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
             combinedLight = 0;
         } else if (color24 != colorManager.getAirColor() && color24 != 0 && options.dynamicLighting) {
             MutableBlockPos blockPos = MutableBlockPosCache.get();
-            blockPos.setXYZ(x, Math.max(Math.min(height, world.getMaxY()), world.getMinY()), z);
+            blockPos.setXYZ(x, Math.clamp(height, world.getMinY(), world.getMaxY()), z);
             int blockLight = world.getBrightness(LightLayer.BLOCK, blockPos);
             int skyLight = world.getBrightness(LightLayer.SKY, blockPos);
             if (blockState.getBlock() == Blocks.LAVA || blockState.getBlock() == Blocks.MAGMA_BLOCK) {

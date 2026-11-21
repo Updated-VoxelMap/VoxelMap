@@ -48,11 +48,11 @@ public class MapRenderer  {
     private static final float MAP_TEXT_DEPTH = 200.0F;
 
     private final Minecraft minecraft = Minecraft.getInstance();
-    private final MapSettingsManager options;
-    private final WaypointManager waypointManager;
+    private final Map map;
     private final MinimapContext context = new MinimapContext();
     private final Random random = new Random();
-    private final Map map;
+    private final MapSettingsManager options;
+    private final WaypointManager waypointManager;
 
     private final Identifier resourceArrow = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, "images/minimap/minimap_arrow.png");
     private final Identifier resourceSquareMapFrame = Identifier.fromNamespaceAndPath(VoxelConstants.MOD_ID, "images/minimap/square_map_frame.png");
@@ -322,7 +322,7 @@ public class MapRenderer  {
                 synchronized (map.getRenderLock()) {
                     if (imageChanged) {
                         imageChanged = false;
-                        map.updateMapImage();
+                        map.getMapImage(zoom).upload();
                         lastImageX = map.getPosX();
                         lastImageZ = map.getPosZ();
                     }
@@ -379,7 +379,7 @@ public class MapRenderer  {
                     matrixStack.scale(scale, scale, 1.0F);
                     matrixStack.translate(-percentX * matrixScale, -percentY * matrixScale, 0.0F);
 
-                    basePass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(map.getMapImage()));
+                    basePass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(map.getUploadedMapImage(zoom)));
                     basePass.submitQuad(matrixStack, -256.0F, -256.0F, 0.0F, 512.0F, 512.0F, 0xFFFFFFFF);
                     basePass.nextDraw();
                     matrixStack.popMatrix();
@@ -453,7 +453,7 @@ public class MapRenderer  {
         matrixStack.translate(-(scWidth / 2.0F), -(scHeight / 2.0F), 0.0F);
         int left = scWidth / 2 - 128;
         int top = scHeight / 2 - 128;
-        pass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(map.getMapImage()));
+        pass.setRenderType(VoxelMapRenderTypes.GUI_TEXTURED_GEQUAL_DEPTH.apply(map.getUploadedMapImage(zoom)));
         pass.submitQuad(matrixStack, left, top, MAP_IMAGE_DEPTH, 256.0F, 256.0F, 0xFFFFFFFF);
         pass.nextDraw();
         matrixStack.popMatrix();
@@ -462,7 +462,7 @@ public class MapRenderer  {
             double factor = Math.pow(2.0, 3 - zoom);
             int minimumSize = (int) Math.pow(2.0, zoom);
             minimumSize *= minimumSize;
-            ArrayList<AbstractMapData.BiomeLabel> labels = map.getMapData().getBiomeLabels();
+            ArrayList<AbstractMapData.BiomeLabel> labels = map.getMapData(zoom).getBiomeLabels();
             matrixStack.pushMatrix();
 
             for (AbstractMapData.BiomeLabel o : labels) {

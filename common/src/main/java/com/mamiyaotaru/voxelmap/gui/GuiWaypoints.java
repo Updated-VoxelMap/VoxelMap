@@ -258,10 +258,13 @@ public class GuiWaypoints extends GuiScreenMinimap implements IGuiWaypoints {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         tooltip = null;
 
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics);
 
         graphics.centeredText(getFont(), screenTitle, getWidth() / 2, 20, 0xFFFFFFFF);
         graphics.text(getFont(), I18n.get("minimap.waypoints.filter") + ":", getWidth() / 2 - 153, getHeight() - 73, 0xFFA0A0A0);

@@ -173,7 +173,7 @@ public class EntityMeshRenderer {
 
         try (RenderPass renderPass = RenderUtils.createRenderPass("VoxelMap Entity Render", renderTarget, new Vector4f(0.0F, 0.0F, 0.0F, 0.0F), 0.0)) {
             if (meshInfo != null) {
-                renderPass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
+                renderPass.setPipeline(RenderSystem.getCompiledPipeline(pipeline, renderPass.activeSubpass()));
                 RenderSystem.bindDefaultUniforms(renderPass);
                 renderPass.enableScissor(scissorState.x(), scissorState.y(), scissorState.width(), scissorState.height());
                 renderPass.setUniform("Sampler1", minecraft.gameRenderer.overlayTexture().getTextureView(), RenderUtils.getSampler(true, false));

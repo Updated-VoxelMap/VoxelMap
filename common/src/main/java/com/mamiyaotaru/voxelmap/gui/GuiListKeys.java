@@ -131,7 +131,10 @@ public class GuiListKeys extends AbstractSelectionList<GuiListKeys.RowItem> {
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void extractContent(GuiGraphicsExtractor graphics, boolean hovered) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float tickDelta = graphics.partialTicks();
             if (this.button != null && this.buttonReset != null) {
                 graphics.text(this.parentGui.getFont(), Component.translatable(this.keyMapping.getName()), getX() + 5, getY() + 5, 0xFFFFFFFF);
 
@@ -162,12 +165,12 @@ public class GuiListKeys extends AbstractSelectionList<GuiListKeys.RowItem> {
                 this.button.setMessage(keyText);
                 this.button.setX(getX() + getWidth() - 135);
                 this.button.setY(getY());
-                this.button.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+                this.button.extractRenderState(graphics);
 
                 this.buttonReset.active = !this.keyMapping.isDefault();
                 this.buttonReset.setX(getX() + getWidth() - 55);
                 this.buttonReset.setY(getY());
-                this.buttonReset.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+                this.buttonReset.extractRenderState(graphics);
             }
         }
 

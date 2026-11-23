@@ -125,11 +125,14 @@ public class GuiSubworldEdit extends GuiScreenMinimap implements BooleanConsumer
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         graphics.centeredText(this.getFont(), Component.translatable("worldmap.subworld.edit"), this.getWidth() / 2, 20, 0xFFFFFFFF);
         graphics.text(this.getFont(), Component.translatable("worldmap.subworld.name"), this.getWidth() / 2 - 100, this.getHeight() / 6, 0xFFA0A0A0);
-        this.subworldNameField.extractRenderState(graphics, mouseX, mouseY, delta);
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        this.subworldNameField.extractRenderState(graphics);
+        super.extractRenderState(graphics);
     }
 
     private boolean isNameAcceptable() {

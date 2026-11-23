@@ -6,7 +6,7 @@ import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import java.util.ArrayList;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiPipeline;
 
 public class Popup {
     private final Font fontRendererObj;
@@ -92,7 +92,7 @@ public class Popup {
         float umax = (this.x + this.w) / renderedTextureSize;
         float vmin = this.y / renderedTextureSize;
         float vmax = (this.y + this.h) / renderedTextureSize;
-        VoxelMapGuiGraphics.blitFloat(graphics, RenderPipelines.GUI_TEXTURED, VoxelConstants.getOptionsBackgroundTexture(), x, y, w, h, umin, umax, vmin, vmax, 0xff404040);
+        VoxelMapGuiGraphics.blitFloat(graphics, GuiPipeline.TEXTURED, VoxelConstants.getOptionsBackgroundTexture(), x, y, w, h, umin, umax, vmin, vmax, 0xff404040);
         VoxelMapGuiGraphics.fillGradient(graphics, x, y, x + w, y + 4, 0xff000000, 0xff000000, 0x00000000, 0x00000000);
         VoxelMapGuiGraphics.fillGradient(graphics, x, y + h - 4, x + w, y + h, 0x00000000, 0x00000000, 0xff000000, 0xff000000);
 

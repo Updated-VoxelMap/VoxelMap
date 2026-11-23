@@ -126,7 +126,10 @@ class GuiListMobs extends AbstractSelectionList<GuiListMobs.MobItem> {
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void extractContent(GuiGraphicsExtractor graphics, boolean hovered) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float tickDelta = graphics.partialTicks();
             boolean isHostile = category == VoxelMapMobCategory.HOSTILE;
             boolean isNeutral = !isHostile;
             boolean isEnabled = parentGui.options.isMobEnabled(type);
@@ -149,12 +152,12 @@ class GuiListMobs extends AbstractSelectionList<GuiListMobs.MobItem> {
                 int iconHeight = Math.min(18, mobIconSprite.getIconHeight() / 3);
                 mobIcon.setPosition(getX() + 2, getY());
                 mobIcon.setIcon(mobIconSprite, iconWidth, iconHeight, 0xFFFFFFFF);
-                mobIcon.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+                mobIcon.extractRenderState(graphics);
             }
 
             mobToggle.setPosition(getX() + getWidth() - 20, getY());
             mobToggle.setIcon(isEnabled ? VoxelConstants.getCheckMarkerTexture() : VoxelConstants.getCrossMarkerTexture(), 0xFFFFFFFF);
-            mobToggle.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+            mobToggle.extractRenderState(graphics);
 
             if (mobIconSprite != null && mobIcon.isMouseOver(mouseX, mouseY)) {
                 parentGui.setTooltip(isEnabled ? GuiListMobs.ENABLED : GuiListMobs.DISABLED);

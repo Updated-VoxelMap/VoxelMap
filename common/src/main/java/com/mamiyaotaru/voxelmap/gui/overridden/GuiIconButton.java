@@ -4,7 +4,7 @@ import com.mamiyaotaru.voxelmap.rendering.VoxelMapGuiGraphics;
 import com.mamiyaotaru.voxelmap.textures.Sprite;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -59,7 +59,10 @@ public class GuiIconButton extends Button.Plain {
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    protected void extractContents(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         if (icon == null) {
             return;
         }
@@ -67,7 +70,7 @@ public class GuiIconButton extends Button.Plain {
         float iconX = getX() + ((getWidth() - iconWidth) / 2.0F);
         float iconY = getY() + ((getHeight() - iconHeight) / 2.0F);
 
-        VoxelMapGuiGraphics.blitFloat(graphics, RenderPipelines.GUI_TEXTURED, icon, iconX, iconY, iconWidth, iconHeight, u0, u1, v0, v1, color);
+        VoxelMapGuiGraphics.blitFloat(graphics, GuiPipeline.TEXTURED, icon, iconX, iconY, iconWidth, iconHeight, u0, u1, v0, v1, color);
     }
 
     @Override

@@ -28,7 +28,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ARGB;
@@ -423,10 +423,17 @@ public class GuiAddWaypoint extends GuiScreenMinimap implements IPopupGuiScreen 
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         tooltip = null;
 
-        super.extractRenderState(graphics, popupOpen() ? 0 : mouseX, popupOpen() ? 0 : mouseY, delta);
+        if (popupOpen()) {
+            graphics.extractWithoutMouse(() -> super.extractRenderState(graphics));
+        } else {
+            super.extractRenderState(graphics);
+        }
 
         graphics.centeredText(getFont(), (parentGui == null || !parentGui.isEditing()) && !editing ? I18n.get("minimap.waypoints.new") : I18n.get("minimap.waypoints.edit"), getWidth() / 2, 20, 0xFFFFFFFF);
         graphics.text(getFont(), I18n.get("minimap.waypoints.name"), getWidth() / 2 - 100, getHeight() / 6, 0xFFFFFFFF);
@@ -446,7 +453,7 @@ public class GuiAddWaypoint extends GuiScreenMinimap implements IPopupGuiScreen 
         if (icon == chooser.getMissingImage()) {
             icon = chooser.getAtlasSprite(WaypointManager.fallbackIconLocation);
         }
-        icon.blit(graphics, RenderPipelines.GUI_TEXTURED, getWidth() / 2 - 25, buttonListY + 48 + 2, 16, 16, color);
+        icon.blit(graphics, GuiPipeline.TEXTURED, getWidth() / 2 - 25, buttonListY + 48 + 2, 16, 16, color);
 
         if (popupOpen()) {
             graphics.nextStratum();
@@ -466,7 +473,7 @@ public class GuiAddWaypoint extends GuiScreenMinimap implements IPopupGuiScreen 
                 TooltipRenderUtil.extractTooltipBackground(graphics, x0, y0, x1, y1, null);
 
                 // render color picker
-                colorPicker.extractRenderState(graphics, mouseX, mouseY, delta);
+                colorPicker.extractRenderState(graphics);
                 int pickerColor = colorPicker.getColor();
                 int red = ARGB.red(pickerColor);
                 int green = ARGB.green(pickerColor);
@@ -485,7 +492,7 @@ public class GuiAddWaypoint extends GuiScreenMinimap implements IPopupGuiScreen 
                 int buttonX = (getWidth() + colorPicker.getWidth()) / 2 - colorPickerModeButton.getWidth() + 18;
                 int buttonY = (getHeight() + colorPicker.getHeight()) / 2 + 6;
                 colorPickerModeButton.setPosition(buttonX, buttonY);
-                colorPickerModeButton.extractRenderState(graphics, mouseX, mouseY, delta);
+                colorPickerModeButton.extractRenderState(graphics);
             }
 
             if (choosingIcon) {
@@ -496,7 +503,7 @@ public class GuiAddWaypoint extends GuiScreenMinimap implements IPopupGuiScreen 
                 int pickerX = (getWidth() - chooser.getWidth()) / 2;
                 int pickerY = (getHeight() - chooser.getHeight()) / 2;
                 for (Sprite pickerIcon : chooser.getUploadedSprites()) {
-                    pickerIcon.blit(graphics, RenderPipelines.GUI_TEXTURED, pickerIcon.getOriginX() + pickerX, pickerIcon.getOriginY() + pickerY, pickerIcon.getIconWidth(), pickerIcon.getIconHeight(), 0xBFFFFFFF);
+                    pickerIcon.blit(graphics, GuiPipeline.TEXTURED, pickerIcon.getOriginX() + pickerX, pickerIcon.getOriginY() + pickerY, pickerIcon.getIconWidth(), pickerIcon.getIconHeight(), 0xBFFFFFFF);
                 }
 
                 // render selected icon
@@ -506,7 +513,7 @@ public class GuiAddWaypoint extends GuiScreenMinimap implements IPopupGuiScreen 
                 }
                 int iconX = currentIcon.getOriginX() + pickerX;
                 int iconY = currentIcon.getOriginY() + pickerY;
-                currentIcon.blit(graphics, RenderPipelines.GUI_TEXTURED, iconX, iconY, currentIcon.getIconWidth(), currentIcon.getIconHeight(), color);
+                currentIcon.blit(graphics, GuiPipeline.TEXTURED, iconX, iconY, currentIcon.getIconWidth(), currentIcon.getIconHeight(), color);
 
                 // render hovered icon
                 Sprite hoveredIcon = pickIcon(mouseX, mouseY);
@@ -517,14 +524,14 @@ public class GuiAddWaypoint extends GuiScreenMinimap implements IPopupGuiScreen 
                     iconX = (hoveredIcon.getOriginX() + pickerX) - ((iconWidth - hoveredIcon.getIconWidth()) / 2);
                     iconY = (hoveredIcon.getOriginY() + pickerY) - ((iconHeight - hoveredIcon.getIconHeight()) / 2);
 
-                    hoveredIcon.blit(graphics, RenderPipelines.GUI_TEXTURED, iconX, iconY, iconWidth, iconHeight, iconColor);
+                    hoveredIcon.blit(graphics, GuiPipeline.TEXTURED, iconX, iconY, iconWidth, iconHeight, iconColor);
 
                     tooltip = Component.translatable("minimap.waypoints.icon." + WaypointManager.toSimpleName(hoveredIcon.getIconName().toString()).replace("selectable/", ""));
                 }
             }
 
-            popupDoneButton.extractRenderState(graphics, mouseX, mouseY, delta);
-            popupCancelButton.extractRenderState(graphics, mouseX, mouseY, delta);
+            popupDoneButton.extractRenderState(graphics);
+            popupCancelButton.extractRenderState(graphics);
         }
 
         if (tooltip != null) {

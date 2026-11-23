@@ -136,14 +136,17 @@ public class GuiSubworldsSelect extends GuiScreenMinimap implements BooleanConsu
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         int titleStringWidth = this.getFont().width(this.title);
         titleStringWidth = Math.max(titleStringWidth, this.getFont().width(this.select));
         graphics.fill(this.width / 2 - titleStringWidth / 2 - 5, 0, this.width / 2 + titleStringWidth / 2 + 5, 27, -1073741824);
         graphics.text(this.getFont(), this.title, this.width / 2, 5, 0xFFFFFFFF);
         graphics.text(this.getFont(), this.select, this.width / 2, 15, 0xFFFF0000);
 
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics);
 
     }
 

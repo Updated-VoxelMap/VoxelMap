@@ -1,6 +1,6 @@
 package com.mamiyaotaru.voxelmap.rendering;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import net.minecraft.client.gui.GuiPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
@@ -9,7 +9,7 @@ import net.minecraft.util.Mth;
 import org.joml.Matrix3x2f;
 
 public record FloatBlitRenderState(
-        RenderPipeline pipeline,
+        GuiPipeline pipeline,
         TextureSetup textureSetup,
         Matrix3x2f pose,
         float x0,
@@ -25,7 +25,7 @@ public record FloatBlitRenderState(
         ScreenRectangle scissorArea,
         ScreenRectangle bounds) implements GuiElementRenderState {
     public FloatBlitRenderState(
-            RenderPipeline renderPipeline,
+            GuiPipeline renderPipeline,
             TextureSetup textureSetup,
             Matrix3x2f matrix3x2f,
             float x0,

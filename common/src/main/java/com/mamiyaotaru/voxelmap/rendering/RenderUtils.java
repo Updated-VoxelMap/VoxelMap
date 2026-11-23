@@ -22,9 +22,10 @@ import java.util.ArrayDeque;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.function.Consumer;
+import net.minecraft.client.renderer.RenderPassLayouts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.util.ARGB;
 import org.joml.Matrix4fStack;
@@ -112,7 +113,7 @@ public class RenderUtils {
     public static void blitToScreen(GuiGraphicsExtractor graphics, GpuTextureView texture, float x, float y, float width, float height, int color) {
         float v0 = RenderUtils.hasFlippedV() ? 1.0F : 0.0F;
         float v1 = RenderUtils.hasFlippedV() ? 0.0F : 1.0F;
-        VoxelMapGuiGraphics.blitFloat(graphics, RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA, texture, x, y, width, height, 0.0F, 1.0F, v0, v1, color);
+        VoxelMapGuiGraphics.blitFloat(graphics, GuiPipeline.TEXTURED_PREMULTIPLIED_ALPHA, texture, x, y, width, height, 0.0F, 1.0F, v0, v1, color);
     }
 
     public static GpuSampler getSampler(boolean linear, boolean repeat) {
@@ -132,7 +133,7 @@ public class RenderUtils {
     }
 
     public static RenderPass createRenderPass(String name, RenderTarget target, Vector4fc colorClear, double depthClear) {
-        return RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> name, target.getColorTextureView(), Optional.of(colorClear), target.getDepthTextureView(), OptionalDouble.of(depthClear));
+        return RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> name, RenderPassLayouts.COLOR_DEPTH, target.getColorTextureView(), Optional.of(colorClear), target.getDepthTextureView(), OptionalDouble.of(depthClear));
     }
 
     public static void flushCmds() {

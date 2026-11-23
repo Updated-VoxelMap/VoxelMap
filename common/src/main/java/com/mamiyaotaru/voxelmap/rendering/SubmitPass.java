@@ -8,6 +8,7 @@ import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import java.util.Optional;
 import java.util.OptionalDouble;
+import net.minecraft.client.renderer.RenderPassLayouts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.OrderedSubmitNodeCollector;
@@ -136,7 +137,7 @@ public class SubmitPass implements AutoCloseable {
     public void flush() {
         try (FeatureRenderDispatcher.PreparedFrame frame = Minecraft.getInstance().gameRenderer.featureRenderDispatcher().prepareFrame(submitNodeStorage)) {
             CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
-            try (RenderPass pass = encoder.createRenderPass(() -> "VoxelMap SubmitPass Draw", colorTexture, colorClear, depthTexture, depthClear)) {
+            try (RenderPass pass = encoder.createRenderPass(() -> "VoxelMap SubmitPass Draw", RenderPassLayouts.COLOR_DEPTH, colorTexture, colorClear, depthTexture, depthClear)) {
                 RenderSystem.bindDefaultUniforms(pass);
                 frame.executeSolid(pass);
                 frame.executeTranslucent(pass);
@@ -145,7 +146,7 @@ public class SubmitPass implements AutoCloseable {
             }
 
             if (frame.hasAnySeeThrough()) {
-                try (RenderPass pass = encoder.createRenderPass(() -> "VoxelMap SubmitPass See Through", colorTexture, Optional.empty())) {
+                try (RenderPass pass = encoder.createRenderPass(() -> "VoxelMap SubmitPass See Through", RenderPassLayouts.COLOR_ONLY, colorTexture, Optional.empty())) {
                     RenderSystem.bindDefaultUniforms(pass);
                     frame.executeSeeThrough(pass);
                 }

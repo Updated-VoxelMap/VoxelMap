@@ -141,7 +141,10 @@ public final class SettingsListWidget extends AbstractSelectionList<SettingsList
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float delta) {
+        public void extractContent(GuiGraphicsExtractor graphics, boolean hovered) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float delta = graphics.partialTicks();
             graphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight() - 2, 0xAA202020);
             graphics.text(screen.getFont(), title.copy().withStyle(ChatFormatting.BOLD), getX() + 8, getY() + 7, 0xFFFFFFFF);
         }
@@ -155,7 +158,10 @@ public final class SettingsListWidget extends AbstractSelectionList<SettingsList
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float delta) {
+        public void extractContent(GuiGraphicsExtractor graphics, boolean hovered) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float delta = graphics.partialTicks();
             graphics.text(screen.getFont(), text, getX() + 10, getY() + 7, 0xFFA0A0A0);
         }
     }
@@ -184,7 +190,10 @@ public final class SettingsListWidget extends AbstractSelectionList<SettingsList
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float delta) {
+        public void extractContent(GuiGraphicsExtractor graphics, boolean hovered) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float delta = graphics.partialTicks();
             boolean enabled = option.enabled();
             int indent = option.indentation() * 12;
             int controlWidth = Math.clamp(getWidth() / 2, 105, 190);
@@ -209,7 +218,7 @@ public final class SettingsListWidget extends AbstractSelectionList<SettingsList
             int labelMaxWidth = control.getX() - getX() - 20 - indent;
             String label = screen.getFont().plainSubstrByWidth(option.name().getString(), Math.max(20, labelMaxWidth));
             graphics.text(screen.getFont(), label, getX() + 10 + indent, getY() + 10, labelColor);
-            control.extractRenderState(graphics, mouseX, mouseY, delta);
+            control.extractRenderState(graphics);
         }
 
         @Override
@@ -339,7 +348,10 @@ public final class SettingsListWidget extends AbstractSelectionList<SettingsList
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float delta) {
+        public void extractContent(GuiGraphicsExtractor graphics, boolean hovered) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float delta = graphics.partialTicks();
             int resetWidth = Math.min(70, Math.max(48, getWidth() / 6));
             int bindWidth = Math.min(150, Math.max(80, getWidth() / 3));
             resetButton.setRectangle(resetWidth, 20, getX() + getWidth() - resetWidth - 8, getY() + 4);
@@ -360,8 +372,8 @@ public final class SettingsListWidget extends AbstractSelectionList<SettingsList
             int labelWidth = bindButton.getX() - getX() - 16;
             String label = screen.getFont().plainSubstrByWidth(Component.translatable(mapping.getName()).getString(), Math.max(20, labelWidth));
             graphics.text(screen.getFont(), label, getX() + 10, getY() + 10, 0xFFFFFFFF);
-            bindButton.extractRenderState(graphics, mouseX, mouseY, delta);
-            resetButton.extractRenderState(graphics, mouseX, mouseY, delta);
+            bindButton.extractRenderState(graphics);
+            resetButton.extractRenderState(graphics);
         }
 
         @Override

@@ -75,15 +75,18 @@ public final class EntityTypeDialog extends AbstractWidget implements ContainerE
     }
 
     @Override
-    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         graphics.fill(0, 0, screen.getWidth(), screen.getHeight(), 0x99000000);
         graphics.fill(dialogX, dialogY, dialogX + dialogWidth, dialogY + dialogHeight, 0xFF181818);
         graphics.fill(dialogX, dialogY, dialogX + dialogWidth, dialogY + 24, 0xFF303030);
         graphics.centeredText(screen.getFont(), getMessage().copy().withStyle(ChatFormatting.BOLD), screen.getWidth() / 2, dialogY + 8, 0xFFFFFFFF);
 
-        filter.extractRenderState(graphics, mouseX, mouseY, delta);
-        list.extractRenderState(graphics, mouseX, mouseY, delta);
-        done.extractRenderState(graphics, mouseX, mouseY, delta);
+        filter.extractRenderState(graphics);
+        list.extractRenderState(graphics);
+        done.extractRenderState(graphics);
     }
 
     @Override
@@ -202,8 +205,11 @@ public final class EntityTypeDialog extends AbstractWidget implements ContainerE
         }
 
         @Override
-        public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-            super.extractWidgetRenderState(graphics, mouseX, mouseY, delta);
+        public void extractWidgetRenderState(GuiGraphicsExtractor graphics) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float delta = graphics.partialTicks();
+            super.extractWidgetRenderState(graphics);
             if (getItemCount() == 0) {
                 graphics.centeredText(screen.getFont(), Component.translatable("options.voxelmap.entityDialog.empty"),
                         getX() + getWidth() / 2, getY() + 12, 0xFFA0A0A0);
@@ -242,7 +248,10 @@ public final class EntityTypeDialog extends AbstractWidget implements ContainerE
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float delta) {
+        public void extractContent(GuiGraphicsExtractor graphics, boolean hovered) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float delta = graphics.partialTicks();
             RadarSettingsManager radar = VoxelConstants.getVoxelMapInstance().getRadarOptions();
             boolean shown = !radar.hiddenMobs.contains(id);
             toggle.setRectangle(92, 20, getX() + getWidth() - 100, getY() + 4);
@@ -261,7 +270,7 @@ public final class EntityTypeDialog extends AbstractWidget implements ContainerE
                 icon.setPosition(getX() + 8, getY() + 4);
                 int iconColor = shown ? 0xFFFFFFFF : 0xFF808080;
                 icon.setIcon(sprite, Math.min(20, sprite.getIconWidth() / 3), Math.min(20, sprite.getIconHeight() / 3), iconColor);
-                icon.extractRenderState(graphics, mouseX, mouseY, delta);
+                icon.extractRenderState(graphics);
             }
 
             Component categoryLabel = Component.translatable(category == VoxelMapMobCategory.HOSTILE
@@ -274,7 +283,7 @@ public final class EntityTypeDialog extends AbstractWidget implements ContainerE
             int nameColor = shown ? 0xFF80FF80 : 0xFFFF8080;
             graphics.text(screen.getFont(), screen.getFont().plainSubstrByWidth(name.getString(), nameWidth), getX() + 34, getY() + 10, nameColor);
             graphics.text(screen.getFont(), categoryLabel, categoryX, getY() + 10, categoryColor);
-            toggle.extractRenderState(graphics, mouseX, mouseY, delta);
+            toggle.extractRenderState(graphics);
         }
 
         @Override

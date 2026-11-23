@@ -16,7 +16,7 @@ import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
@@ -136,11 +136,14 @@ public class GuiListPlayers extends AbstractSelectionList<GuiListPlayers.Row> {
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void extractContent(GuiGraphicsExtractor graphics, boolean hovered) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float tickDelta = graphics.partialTicks();
             buttonAndIds.forEach((button, id) -> {
                 if (button != null) {
                     button.setY(getY());
-                    button.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+                    button.extractRenderState(graphics);
                     if (id != -1) {
                         drawIconForButton(graphics, button, id);
                     }
@@ -154,9 +157,9 @@ public class GuiListPlayers extends AbstractSelectionList<GuiListPlayers.Row> {
             Optional<PlayerSkin> optionalSkin = VoxelConstants.getMinecraft().getSkinManager().get(gameProfile).getNow(Optional.empty());
             if (optionalSkin.isPresent()) {
                 Identifier skinIdentifier = optionalSkin.get().body().texturePath();
-                graphics.blit(RenderPipelines.GUI_TEXTURED, skinIdentifier, button.getX() + 6, button.getY() + 6, 8.0F, 8.0F, 8, 8, 8, 8, 64, 64);
+                graphics.blit(GuiPipeline.TEXTURED, skinIdentifier, button.getX() + 6, button.getY() + 6, 8.0F, 8.0F, 8, 8, 8, 8, 64, 64);
                 if (player != null && player.isModelPartShown(PlayerModelPart.HAT)) {
-                    graphics.blit(RenderPipelines.GUI_TEXTURED, skinIdentifier, button.getX() + 6, button.getY() + 6, 40.0F, 8.0F, 8, 8, 8, 8, 64, 64);
+                    graphics.blit(GuiPipeline.TEXTURED, skinIdentifier, button.getX() + 6, button.getY() + 6, 40.0F, 8.0F, 8, 8, 8, 8, 64, 64);
                 }
             }
         }

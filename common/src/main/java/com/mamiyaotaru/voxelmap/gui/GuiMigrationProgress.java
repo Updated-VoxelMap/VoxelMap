@@ -32,7 +32,10 @@ public class GuiMigrationProgress extends GuiScreenMinimap {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         int centerX = this.getWidth() / 2;
         int barWidth = 300;
         int barHeight = 10;
@@ -58,6 +61,6 @@ public class GuiMigrationProgress extends GuiScreenMinimap {
             graphics.centeredText(this.getFont(), this.progress.currentFile, centerX, barY + barHeight + 20, 0xFF808080);
         }
 
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics);
     }
 }

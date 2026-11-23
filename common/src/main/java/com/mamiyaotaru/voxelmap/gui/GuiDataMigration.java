@@ -83,10 +83,13 @@ public class GuiDataMigration extends GuiScreenMinimap {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         int centerX = this.getWidth() / 2;
         graphics.centeredText(this.getFont(), this.titleText, centerX, this.getHeight() / 4 - 20, 0xFFFFFFFF);
         graphics.textWithWordWrap(this.getFont(), this.descriptionText, centerX - 155, this.getHeight() / 4, 310, 0xFFFFFFFF);
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics);
     }
 }

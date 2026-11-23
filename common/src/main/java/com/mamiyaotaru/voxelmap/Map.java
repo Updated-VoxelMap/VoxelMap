@@ -567,7 +567,7 @@ public class Map implements Runnable, IChangeObserver, IReloadListener {
                     this.lastBiome = biomeID;
                 }
 
-                if (this.needSkyColor || scheduledUpdate) {
+                if ((this.needSkyColor || scheduledUpdate) && minecraft.gameRenderer.mainCamera().getFogType() != null) {
                     this.colorManager.setSkyColor(this.getSkyColor());
                 }
             }

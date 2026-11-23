@@ -83,12 +83,15 @@ class GuiListDimensions extends AbstractSelectionList<GuiListDimensions.Dimensio
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void extractContent(GuiGraphicsExtractor graphics, boolean hovered) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float tickDelta = graphics.partialTicks();
             graphics.centeredText(parentGui.getFont(), dim.getDisplayName(), (parentGui.getWidth() + getWidth()) / 2, getY() + 3, 0xFFFFFFFF);
 
             dimToggle.setPosition(getX() + getWidth() - 20, getY());
             dimToggle.setIcon(parentGui.dimensions.contains(dim) ? VoxelConstants.getCheckMarkerTexture() : VoxelConstants.getCrossMarkerTexture(), 0xFFFFFFFF);
-            dimToggle.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+            dimToggle.extractRenderState(graphics);
 
             if (dimToggle.isMouseOver(mouseX, mouseY)) {
                 parentGui.setTooltip(parentGui.dimensions.contains(dim) ? APPLIES : NOT_APPLIES);

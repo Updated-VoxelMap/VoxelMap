@@ -6,11 +6,11 @@ plugins {
     id("com.gradleup.shadow") version ("9.6.1") apply (false)
 }
 
-val minecraftVersion by extra { "26.4-snapshot-3" }
+val minecraftVersion by extra { "26.4-snapshot-10" }
 val forgeVersion by extra { "66.0.3" }
 val neoForgeVersion by extra { "26.3.0.16-beta" }
-val fabricVersion by extra { "0.19.5" }
-val fabricApiVersion by extra { "0.162.2+26.4" }
+val fabricVersion by extra { "0.20.1" }
+val fabricApiVersion by extra { "0.166.4+26.4" }
 val modMenuVersion by extra { "21.0.0" }
 val paperApiVersion by extra { "[26.3.build,)" }
 val voxelConfigVersion by extra { "1.0.2" }

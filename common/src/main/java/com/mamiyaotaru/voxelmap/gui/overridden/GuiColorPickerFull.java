@@ -7,7 +7,7 @@ import java.awt.Color;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiPipeline;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
@@ -81,7 +81,10 @@ public class GuiColorPickerFull extends AbstractColorPicker {
     }
 
     @Override
-    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractWidgetRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         int fullColor = color;
         int wheelRadius = getHueWheelRadius();
 
@@ -92,8 +95,8 @@ public class GuiColorPickerFull extends AbstractColorPicker {
 
         float sSliderHandleX = sSliderX;
         float sSliderHandleY = sSliderY - wheelRadius + ((wheelRadius * 2.0F) * (1.0F - s));
-        VoxelMapGuiGraphics.blitFloat(graphics, RenderPipelines.GUI_TEXTURED, sliderHandle, sSliderHandleX - 8, sSliderHandleY - 4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, 0xFFFFFFFF);
-        VoxelMapGuiGraphics.blitFloat(graphics, RenderPipelines.GUI_TEXTURED, sliderHandleTint, sSliderHandleX - 8, sSliderHandleY - 4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, fullColor);
+        VoxelMapGuiGraphics.blitFloat(graphics, GuiPipeline.TEXTURED, sliderHandle, sSliderHandleX - 8, sSliderHandleY - 4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, 0xFFFFFFFF);
+        VoxelMapGuiGraphics.blitFloat(graphics, GuiPipeline.TEXTURED, sliderHandleTint, sSliderHandleX - 8, sSliderHandleY - 4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, fullColor);
 
         // render v picker
         int vSliderX = getValueSliderX();
@@ -102,22 +105,22 @@ public class GuiColorPickerFull extends AbstractColorPicker {
 
         float vSliderHandleX = vSliderX;
         float vSliderHandleY = vSliderY - wheelRadius + ((wheelRadius * 2.0F) * (1.0F - v));
-        VoxelMapGuiGraphics.blitFloat(graphics, RenderPipelines.GUI_TEXTURED, sliderHandle, vSliderHandleX - 8, vSliderHandleY - 4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, 0xFFFFFFFF);
-        VoxelMapGuiGraphics.blitFloat(graphics, RenderPipelines.GUI_TEXTURED, sliderHandleTint, vSliderHandleX - 8, vSliderHandleY - 4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, fullColor);
+        VoxelMapGuiGraphics.blitFloat(graphics, GuiPipeline.TEXTURED, sliderHandle, vSliderHandleX - 8, vSliderHandleY - 4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, 0xFFFFFFFF);
+        VoxelMapGuiGraphics.blitFloat(graphics, GuiPipeline.TEXTURED, sliderHandleTint, vSliderHandleX - 8, vSliderHandleY - 4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, fullColor);
 
         // render h, s picker
         int wheelX = getHueWheelX();
         int wheelY = getHueWheelY();
         Identifier colorWheelImage = VoxelConstants.getVoxelMapInstance().getColorManager().getHueColorWheel();
-        graphics.blit(RenderPipelines.GUI_TEXTURED, colorWheelImage, wheelX - wheelRadius, wheelY - wheelRadius, 0.0F, 0.0F, wheelRadius * 2, wheelRadius * 2, wheelRadius * 2, wheelRadius * 2, 0xFFFFFFFF);
+        graphics.blit(GuiPipeline.TEXTURED, colorWheelImage, wheelX - wheelRadius, wheelY - wheelRadius, 0.0F, 0.0F, wheelRadius * 2, wheelRadius * 2, wheelRadius * 2, wheelRadius * 2, 0xFFFFFFFF);
 
         float radians = h * 360.0F * Mth.DEG_TO_RAD;
         graphics.pose().pushMatrix();
         graphics.pose().translate(wheelX, wheelY);
         graphics.pose().rotate(radians);
         graphics.pose().translate(wheelRadius, 0.0F);
-        VoxelMapGuiGraphics.blitFloat(graphics, RenderPipelines.GUI_TEXTURED, sliderHandle, -SLIDER_WIDTH, -4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, 0xFFFFFFFF);
-        VoxelMapGuiGraphics.blitFloat(graphics, RenderPipelines.GUI_TEXTURED, sliderHandleTint, -SLIDER_WIDTH, -4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, Color.getHSBColor(h, 1.0F, 1.0F).getRGB());
+        VoxelMapGuiGraphics.blitFloat(graphics, GuiPipeline.TEXTURED, sliderHandle, -SLIDER_WIDTH, -4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, 0xFFFFFFFF);
+        VoxelMapGuiGraphics.blitFloat(graphics, GuiPipeline.TEXTURED, sliderHandleTint, -SLIDER_WIDTH, -4, 16, 8, 0.0F, 1.0F, 0.0F, 1.0F, Color.getHSBColor(h, 1.0F, 1.0F).getRGB());
         graphics.pose().popMatrix();
 
         // render texts

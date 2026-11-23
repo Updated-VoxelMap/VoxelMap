@@ -13,7 +13,6 @@
     "APIMixinChatListenerHud",
     "APIMixinMinecraftClient",
     "APIMixinNetHandlerPlayClient",
-    "AccessorTextureManager",
     "MixinCamera",
     "MixinClientLevel",
     "MixinInGameHud",

@@ -244,7 +244,10 @@ public class GuiServerAliases extends GuiScreenMinimap {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         int centerX = this.getWidth() / 2;
         graphics.centeredText(this.getFont(), Component.translatable("voxelmap.alias.title"), centerX, 16, 0xFFFFFFFF);
 
@@ -267,6 +270,6 @@ public class GuiServerAliases extends GuiScreenMinimap {
             graphics.text(this.getFont(), more, this.fieldX + FIELD_WIDTH - 30, this.getHeight() - LIST_BOTTOM_MARGIN + 2, 0xFF808080);
         }
 
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(graphics);
     }
 }

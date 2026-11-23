@@ -1,6 +1,5 @@
 package com.mamiyaotaru.voxelmap.textures;
 
-import com.mamiyaotaru.voxelmap.mixins.AccessorTextureManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.textures.AddressMode;
 import com.mojang.renderpearl.api.textures.FilterMode;
@@ -8,6 +7,7 @@ import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.ExternalTextureProvider;
 import net.minecraft.client.renderer.texture.TextureHandle;
 import net.minecraft.client.renderer.texture.TextureResources;
 import net.minecraft.resources.Identifier;
@@ -18,6 +18,7 @@ public abstract class VoxelMapTexture implements TextureHandle, AutoCloseable {
     protected @Nullable GpuTextureView textureView;
     protected GpuSampler sampler = RenderSystem.getSamplerCache().getSampler(AddressMode.REPEAT, AddressMode.REPEAT, FilterMode.NEAREST, FilterMode.LINEAR, false);
     private @Nullable Identifier location;
+    private @Nullable TextureResources published;
 
     public GpuTexture getTexture() {
         if (this.texture == null) {
@@ -61,6 +62,10 @@ public abstract class VoxelMapTexture implements TextureHandle, AutoCloseable {
         if (this.location != null) {
             Minecraft.getInstance().getTextureManager().release(this.location);
             this.location = null;
+            if (this.published != null) {
+                this.published.close();
+                this.published = null;
+            }
         }
     }
 
@@ -69,7 +74,9 @@ public abstract class VoxelMapTexture implements TextureHandle, AutoCloseable {
             return;
         }
         TextureResources resources = new TextureResources(this.texture, this.textureView, this.sampler);
-        TextureResources previous = ((AccessorTextureManager) Minecraft.getInstance().getTextureManager()).voxelmap$getByPath().put(this.location, resources);
+        TextureResources previous = this.published;
+        this.published = resources;
+        Minecraft.getInstance().getTextureManager().registerProvider(this.location, new ExternalTextureProvider(resources));
         if (previous != null && previous.texture() != this.texture) {
             previous.close();
         }

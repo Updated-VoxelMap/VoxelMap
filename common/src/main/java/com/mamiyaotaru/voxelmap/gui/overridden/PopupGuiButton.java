@@ -13,12 +13,11 @@ public class PopupGuiButton extends Button.Plain {
     }
 
     @Override
-    public void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        boolean canHover = this.parentScreen.overPopup(mouseX, mouseY);
-        if (!canHover) {
-            mouseX = 0;
-            mouseY = 0;
+    public void extractContents(GuiGraphicsExtractor graphics) {
+        if (this.parentScreen.overPopup(graphics.mouseX(), graphics.mouseY())) {
+            super.extractContents(graphics);
+        } else {
+            graphics.extractWithoutMouse(() -> super.extractContents(graphics));
         }
-        super.extractContents(graphics, mouseX, mouseY, delta);
     }
 }

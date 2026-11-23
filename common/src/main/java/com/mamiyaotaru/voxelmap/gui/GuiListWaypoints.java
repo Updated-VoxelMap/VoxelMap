@@ -132,7 +132,10 @@ class GuiListWaypoints extends AbstractSelectionList<GuiListWaypoints.WaypointIt
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void extractContent(GuiGraphicsExtractor graphics, boolean hovered) {
+            int mouseX = graphics.mouseX();
+            int mouseY = graphics.mouseY();
+            float tickDelta = graphics.partialTicks();
             int color = waypoint.getUnifiedColor();
             graphics.centeredText(parentGui.getFont(), waypoint.name, parentGui.getWidth() / 2, getY() + 5, color);
 
@@ -142,16 +145,16 @@ class GuiListWaypoints extends AbstractSelectionList<GuiListWaypoints.WaypointIt
             }
             waypointIcon.setPosition(getX() + 2, getY());
             waypointIcon.setIcon(icon, color);
-            waypointIcon.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+            waypointIcon.extractRenderState(graphics);
             if (waypoint == parentGui.highlightedWaypoint) {
                 waypointIcon.setIcon(textureAtlas.getAtlasSprite("marker/target"), 0xFFFF0000);
-                waypointIcon.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+                waypointIcon.extractRenderState(graphics);
             }
 
             Identifier toggleIcon = waypoint.enabled ? VoxelConstants.getCheckMarkerTexture() : VoxelConstants.getCrossMarkerTexture();
             waypointToggle.setPosition(getX() + getWidth() - 20, getY());
             waypointToggle.setIcon(toggleIcon, 0xFFFFFFFF);
-            waypointToggle.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+            waypointToggle.extractRenderState(graphics);
 
             if (waypointIcon.isMouseOver(mouseX, mouseY)) {
                 parentGui.setTooltip(waypoint == parentGui.highlightedWaypoint ? TOOLTIP_UNHIGHLIGHT : TOOLTIP_HIGHLIGHT);

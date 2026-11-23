@@ -36,8 +36,11 @@ public class GuiColorPickerContainer extends AbstractColorPicker {
     }
 
     @Override
-    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        getColorPicker().extractRenderState(graphics, mouseX, mouseY, delta);
+    public void extractWidgetRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
+        getColorPicker().extractRenderState(graphics);
     }
 
     @Override

@@ -252,8 +252,11 @@ public class GuiMinimapOptions extends GuiScreenMinimap {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
+        super.extractRenderState(graphics);
         if (entityTypeDialog == null)
             graphics.centeredText(getFont(), Component.translatable("options.minimap.title"), width / 2, 12, 0xFFFFFFFF);
     }

@@ -21,12 +21,15 @@ public class GuiButtonText extends Button.Plain {
 
 
     @Override
-    public void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+    public void extractContents(GuiGraphicsExtractor graphics) {
+        int mouseX = graphics.mouseX();
+        int mouseY = graphics.mouseY();
+        float delta = graphics.partialTicks();
         if (editing) {
-            textField.extractRenderState(graphics, mouseX, mouseY, delta);
+            textField.extractRenderState(graphics);
             return;
         }
-        super.extractContents(graphics, mouseX, mouseY, delta);
+        super.extractContents(graphics);
     }
 
     @Override

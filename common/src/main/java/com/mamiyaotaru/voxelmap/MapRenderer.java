@@ -243,6 +243,7 @@ public class MapRenderer  {
         showMessage(I18n.get("minimap.ui.zoomLevel", 2.0 / zoomScale));
 
         options.zoom = zoom;
+        options.saveAll();
         map.zoomChanged(zoom);
     }
 
@@ -295,8 +296,7 @@ public class MapRenderer  {
                         }
                     }
                 }
-                int scHeight = minecraft.getWindow().getGuiScaledHeight();
-                float resFactor = (float) scHeight / scHeight;
+                float resFactor = (float) this.scHeight / minecraft.getWindow().getGuiScaledHeight();
                 mapY += (int) (statusIconOffset * resFactor);
             }
         }

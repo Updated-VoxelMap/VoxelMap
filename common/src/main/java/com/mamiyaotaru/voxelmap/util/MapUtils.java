@@ -22,6 +22,10 @@ public class MapUtils {
     }
 
     public static boolean isUnderground(ClientLevel world, int x, int y, int z) {
+        if (!options.cavesAllowed || !options.showCaves) {
+            return false;
+        }
+
         if (world.dimensionType().hasCeiling() || !world.dimensionType().hasSkyLight()) {
             return y < world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
         }

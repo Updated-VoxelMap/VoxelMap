@@ -54,7 +54,7 @@ public class MapSettingsManager implements ISettingsManager {
     public boolean showWaypointSigns = true;
     private boolean lastWaypointBeacons = false;
     private boolean lastWaypointSigns = true;
-    protected boolean showCaves = true;
+    public boolean showCaves = true;
     public boolean moveMapBelowStatusEffectIcons = true;
     public boolean moveScoreboardBelowMap = true;
 
